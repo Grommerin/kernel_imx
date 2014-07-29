@@ -86,7 +86,7 @@
 #define MX6Q_MARSBOARD_RES_TCH_INT      IMX_GPIO_NR(2, 21)
 #define MX6Q_MARSBOARD_USB_HUB_RESET	IMX_GPIO_NR(7, 12)
 #define MX6Q_MARSBOARD_CAN1_STBY	IMX_GPIO_NR(1, 2)
-//#define MX6Q_MARSBOARD_CAN1_EN		IMX_GPIO_NR(1, 4)
+#define MX6Q_MARSBOARD_CAN1_EN		IMX_GPIO_NR(1, 4)
 #define MX6Q_MARSBOARD_MENU_KEY		IMX_GPIO_NR(2, 1)
 #define MX6Q_MARSBOARD_BACK_KEY		IMX_GPIO_NR(2, 2)
 #define MX6Q_MARSBOARD_ONOFF_KEY	IMX_GPIO_NR(2, 3)
@@ -806,7 +806,7 @@ static struct ahci_platform_data mx6q_marsboard_sata_data = {
 	.exit = mx6q_marsboard_sata_exit,
 };
 
-#if 0
+
 static struct gpio mx6q_marsboard_flexcan_gpios[] = {
 	{ MX6Q_MARSBOARD_CAN1_EN, GPIOF_OUT_INIT_LOW, "flexcan1-en" },
 	{ MX6Q_MARSBOARD_CAN1_STBY, GPIOF_OUT_INIT_LOW, "flexcan1-stby" },
@@ -827,7 +827,7 @@ static const struct flexcan_platform_data
 	mx6q_marsboard_flexcan0_pdata __initconst = {
 	.transceiver_switch = mx6q_marsboard_flexcan0_switch,
 };
-#endif
+
 
 static struct viv_gpu_platform_data imx6q_gpu_pdata __initdata = {
 	.reserved_mem_size = SZ_128M,
@@ -1334,14 +1334,14 @@ static void __init mx6_marsboard_board_init(void)
 	imx6q_add_hdmi_soc();
 	imx6q_add_hdmi_soc_dai();
 
-#if 0
+
 	ret = gpio_request_array(mx6q_marsboard_flexcan_gpios,
 			ARRAY_SIZE(mx6q_marsboard_flexcan_gpios));
 	if (ret)
 		pr_err("failed to request flexcan1-gpios: %d\n", ret);
 	else
 		imx6q_add_flexcan0(&mx6q_marsboard_flexcan0_pdata);
-#endif
+
 	clko2 = clk_get(NULL, "clko2_clk");
 	if (IS_ERR(clko2))
 		pr_err("can't get CLKO2 clock.\n");
