@@ -940,7 +940,7 @@ CONFIG_WLAN=y
 #
 # CAIF transport drivers
 #
-CONFIG_PPP=y
+# CONFIG_PPP is not set
 # CONFIG_SLIP is not set
 # CONFIG_NETCONSOLE is not set
 # CONFIG_NETPOLL is not set
