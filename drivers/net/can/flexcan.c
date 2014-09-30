@@ -38,6 +38,8 @@
 #include <mach/clock.h>
 #include <mach/hardware.h>
 
+ #include <stdout.h>
+
 #ifdef CONFIG_ARCH_MXC
 #include <mach/iomux-v3.h>
 #endif
@@ -507,6 +509,9 @@ static void flexcan_read_fifo(const struct net_device *dev,
 
 static int flexcan_read_frame(struct net_device *dev)
 {
+	static int ReadFrames = 0;
+	ReadFrames++;
+	dev_dbg(dev->dev.parent, "Read %5d frames\n", ReadFrames);
 	struct net_device_stats *stats = &dev->stats;
 	struct can_frame *cf;
 	struct sk_buff *skb;
