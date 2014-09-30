@@ -511,7 +511,7 @@ static int flexcan_read_frame(struct net_device *dev)
 {
 	static int ReadFrames = 0;
 	ReadFrames++;
-	dev_dbg(dev->dev.parent, "Read %5d frames\n", ReadFrames);
+	dev_dbg(dev->dev.parent, "Read frames\n");
 	struct net_device_stats *stats = &dev->stats;
 	struct can_frame *cf;
 	struct sk_buff *skb;
@@ -715,6 +715,7 @@ static int flexcan_chip_start(struct net_device *dev)
 		FLEXCAN_MCR_SUPV | FLEXCAN_MCR_WRN_EN |
 		FLEXCAN_MCR_IDAM_C | FLEXCAN_MCR_WAK_MSK |
 		FLEXCAN_MCR_SLF_WAK;
+	reg_mcr &= ~FLEXCAN_MCR_FEN;
 	dev_dbg(dev->dev.parent, "%s: writing mcr=0x%08x", __func__, reg_mcr);
 	writel(reg_mcr, &regs->mcr);
 
