@@ -225,30 +225,6 @@ static inline int flexcan_has_and_handle_berr(const struct flexcan_priv *priv,
 		(reg_esr & FLEXCAN_ESR_ERR_BUS);
 }
 
-static inline void flexcan_chip_FIFO_ON(struct flexcan_priv *priv)
-{
-	struct flexcan_regs __iomem *regs = priv->base;
-	u32 reg;
-
-	reg = readl(&regs->mcr);
-	reg |= FLEXCAN_MCR_FEN;
-	writel(reg, &regs->mcr);
-
-	udelay(10);
-}
-
-static inline void flexcan_chip_FIFO_OFF(struct flexcan_priv *priv)
-{
-	struct flexcan_regs __iomem *regs = priv->base;
-	u32 reg;
-
-	reg = readl(&regs->mcr);
-	reg &= ~FLEXCAN_MCR_FEN;
-	writel(reg, &regs->mcr);
-
-	udelay(10);
-}
-
 static inline void flexcan_chip_enable(struct flexcan_priv *priv)
 {
 	struct flexcan_regs __iomem *regs = priv->base;
@@ -701,9 +677,6 @@ static int flexcan_chip_start(struct net_device *dev)
 
 	/* enable module */
 	flexcan_chip_enable(priv);
-
-	/* on Rx FIFO buffers */
-	flexcan_chip_FIFO_ON(priv);
 
 	/* soft reset */
 	writel(FLEXCAN_MCR_SOFTRST, &regs->mcr);
