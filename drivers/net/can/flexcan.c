@@ -389,7 +389,7 @@ static void do_state(struct net_device *dev,
 		 */
 		if (new_state >= CAN_STATE_ERROR_WARNING &&
 		    new_state <= CAN_STATE_BUS_OFF) {
-			dev_dbg(dev->dev.parent, "Error Warning IRQ\n");
+			dev_dbg(dev->dev.parent, "Error Warning IRQ, O_O\n");
 			priv->can.can_stats.error_warning++;
 
 			cf->can_id |= CAN_ERR_CRTL;
@@ -405,7 +405,7 @@ static void do_state(struct net_device *dev,
 		 */
 		if (new_state >= CAN_STATE_ERROR_PASSIVE &&
 		    new_state <= CAN_STATE_BUS_OFF) {
-			dev_dbg(dev->dev.parent, "Error Passive IRQ\n");
+			dev_dbg(dev->dev.parent, "Error Passive IRQ, O_O\n");
 			priv->can.can_stats.error_passive++;
 
 			cf->can_id |= CAN_ERR_CRTL;
@@ -425,7 +425,7 @@ static void do_state(struct net_device *dev,
 	/* process state changes depending on the new state */
 	switch (new_state) {
 	case CAN_STATE_ERROR_ACTIVE:
-		dev_dbg(dev->dev.parent, "Error Active\n");
+		dev_dbg(dev->dev.parent, "Error Active, aaaaaaaa\n");
 		cf->can_id |= CAN_ERR_PROT;
 		cf->data[2] = CAN_ERR_PROT_ACTIVE;
 		break;
