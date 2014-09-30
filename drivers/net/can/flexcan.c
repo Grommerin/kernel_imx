@@ -483,6 +483,7 @@ static int flexcan_poll_state(struct net_device *dev, u32 reg_esr)
 static void flexcan_read_fifo(const struct net_device *dev,
 			      struct can_frame *cf)
 {
+	dev_dbg(dev->dev.parent, "ReadFrame\n");
 	const struct flexcan_priv *priv = netdev_priv(dev);
 	struct flexcan_regs __iomem *regs = priv->base;
 	struct flexcan_mb __iomem *mb = &regs->cantxfg[0];
@@ -715,7 +716,7 @@ static int flexcan_chip_start(struct net_device *dev)
 		FLEXCAN_MCR_SUPV | FLEXCAN_MCR_WRN_EN |
 		FLEXCAN_MCR_IDAM_C | FLEXCAN_MCR_WAK_MSK |
 		FLEXCAN_MCR_SLF_WAK;
-	reg_mcr &= ~FLEXCAN_MCR_FEN;
+	reg_mcr &= ~(1<<FLEXCAN_MCR_FEN);
 	dev_dbg(dev->dev.parent, "%s: writing mcr=0x%08x", __func__, reg_mcr);
 	writel(reg_mcr, &regs->mcr);
 
