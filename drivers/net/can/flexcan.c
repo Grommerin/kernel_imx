@@ -42,7 +42,7 @@
 #include <mach/iomux-v3.h>
 #endif
 
-#define DRV_NAME			"flexcan"
+#define DRV_NAME			"flexcan_strim_mod"
 
 /* 8 for RX fifo and 2 error handling */
 #define FLEXCAN_NAPI_WEIGHT		(8 + 2)
@@ -387,7 +387,7 @@ static void do_state(struct net_device *dev,
 		 */
 		if (new_state >= CAN_STATE_ERROR_WARNING &&
 		    new_state <= CAN_STATE_BUS_OFF) {
-			dev_dbg(dev->dev.parent, "Error Warning IRQ, O_O\n");
+			dev_dbg(dev->dev.parent, "Error Warning IRQ\n");
 			priv->can.can_stats.error_warning++;
 
 			cf->can_id |= CAN_ERR_CRTL;
@@ -403,7 +403,7 @@ static void do_state(struct net_device *dev,
 		 */
 		if (new_state >= CAN_STATE_ERROR_PASSIVE &&
 		    new_state <= CAN_STATE_BUS_OFF) {
-			dev_dbg(dev->dev.parent, "Error Passive IRQ, O_O\n");
+			dev_dbg(dev->dev.parent, "Error Passive IRQ\n");
 			priv->can.can_stats.error_passive++;
 
 			cf->can_id |= CAN_ERR_CRTL;
@@ -423,7 +423,7 @@ static void do_state(struct net_device *dev,
 	/* process state changes depending on the new state */
 	switch (new_state) {
 	case CAN_STATE_ERROR_ACTIVE:
-		dev_dbg(dev->dev.parent, "Error Active, aaaaaaaa\n");
+		dev_dbg(dev->dev.parent, "Error Active\n");
 		cf->can_id |= CAN_ERR_PROT;
 		cf->data[2] = CAN_ERR_PROT_ACTIVE;
 		break;
@@ -481,7 +481,6 @@ static int flexcan_poll_state(struct net_device *dev, u32 reg_esr)
 static void flexcan_read_fifo(const struct net_device *dev,
 			      struct can_frame *cf)
 {
-	dev_dbg(dev->dev.parent, "ReadFrame\n");
 	const struct flexcan_priv *priv = netdev_priv(dev);
 	struct flexcan_regs __iomem *regs = priv->base;
 	struct flexcan_mb __iomem *mb = &regs->cantxfg[0];
@@ -510,7 +509,7 @@ static int flexcan_read_frame(struct net_device *dev)
 {
 	static int ReadFrames = 0;
 	ReadFrames++;
-	dev_dbg(dev->dev.parent, "Read frames\n");
+	dev_dbg(dev->dev.parent, "Read %5d frames\n", ReadFrames);
 	struct net_device_stats *stats = &dev->stats;
 	struct can_frame *cf;
 	struct sk_buff *skb;
@@ -657,7 +656,7 @@ static void flexcan_set_bittiming(struct net_device *dev)
 	if (priv->can.ctrlmode & CAN_CTRLMODE_3_SAMPLES)
 		reg |= FLEXCAN_CTRL_SMP;
 
-	dev_info(dev->dev.parent, "writing 0000 ctrl=0x%08x\n", reg);
+	dev_info(dev->dev.parent, "writing ctrl=0x%08x\n", reg);
 	writel(reg, &regs->ctrl);
 
 	/* print chip status */
@@ -714,8 +713,7 @@ static int flexcan_chip_start(struct net_device *dev)
 		FLEXCAN_MCR_SUPV | FLEXCAN_MCR_WRN_EN |
 		FLEXCAN_MCR_IDAM_C | FLEXCAN_MCR_WAK_MSK |
 		FLEXCAN_MCR_SLF_WAK;
-	reg_mcr &= ~(1<<FLEXCAN_MCR_FEN);
-	dev_dbg(dev->dev.parent, "%s: writing 1111 mcr=0x%08x", __func__, reg_mcr);
+	dev_dbg(dev->dev.parent, "%s: writing mcr=0x%08x", __func__, reg_mcr);
 	writel(reg_mcr, &regs->mcr);
 
 	/*
@@ -741,7 +739,7 @@ static int flexcan_chip_start(struct net_device *dev)
 
 	/* save for later use */
 	priv->reg_ctrl_default = reg_ctrl;
-	dev_dbg(dev->dev.parent, "%s: writing 2222 ctrl=0x%08x", __func__, reg_ctrl);
+	dev_dbg(dev->dev.parent, "%s: writing ctrl=0x%08x", __func__, reg_ctrl);
 	writel(reg_ctrl, &regs->ctrl);
 
 	for (i = 0; i < ARRAY_SIZE(regs->cantxfg); i++) {
@@ -776,7 +774,7 @@ static int flexcan_chip_start(struct net_device *dev)
 	writel(FLEXCAN_IFLAG_DEFAULT, &regs->imask1);
 
 	/* print chip status */
-	dev_dbg(dev->dev.parent, "%s: reading 3333 mcr=0x%08x ctrl=0x%08x\n",
+	dev_dbg(dev->dev.parent, "%s: reading mcr=0x%08x ctrl=0x%08x\n",
 		__func__, readl(&regs->mcr), readl(&regs->ctrl));
 
 	return 0;
@@ -1124,7 +1122,7 @@ static struct platform_driver flexcan_driver = {
 
 static int __init flexcan_init(void)
 {
-	pr_info("%s netdevice driver\n", DRV_NAME);
+	pr_info("%s netdevice O_O driver\n", DRV_NAME);
 	return platform_driver_register(&flexcan_driver);
 }
 
