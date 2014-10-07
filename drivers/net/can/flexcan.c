@@ -709,7 +709,11 @@ static int flexcan_chip_start(struct net_device *dev)
 	 *
 	 */
 	reg_mcr = readl(&regs->mcr);
-	reg_mcr |= FLEXCAN_MCR_FRZ | FLEXCAN_MCR_FEN | FLEXCAN_MCR_HALT |
+	// reg_mcr |= FLEXCAN_MCR_FRZ | FLEXCAN_MCR_FEN | FLEXCAN_MCR_HALT |
+	// 	FLEXCAN_MCR_SUPV | FLEXCAN_MCR_WRN_EN |
+	// 	FLEXCAN_MCR_IDAM_C | FLEXCAN_MCR_WAK_MSK |
+	// 	FLEXCAN_MCR_SLF_WAK;
+	reg_mcr |= FLEXCAN_MCR_FRZ | FLEXCAN_MCR_HALT |
 		FLEXCAN_MCR_SUPV | FLEXCAN_MCR_WRN_EN |
 		FLEXCAN_MCR_IDAM_C | FLEXCAN_MCR_WAK_MSK |
 		FLEXCAN_MCR_SLF_WAK;
