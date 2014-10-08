@@ -199,13 +199,21 @@ struct flexcan_priv {
 
 static struct can_bittiming_const flexcan_bittiming_const = {
 	.name = DRV_NAME,
-	.tseg1_min = 4,
-	.tseg1_max = 16,
-	.tseg2_min = 2,
-	.tseg2_max = 8,
-	.sjw_max = 4,
+	// .tseg1_min = 4,
+	// .tseg1_max = 16,
+	// .tseg2_min = 2,
+	// .tseg2_max = 8,
+	// .sjw_max = 4,
+	// .brp_min = 1,
+	// .brp_max = 256,
+	// .brp_inc = 1,
+	.tseg1_min = 2,
+	.tseg1_max = 8,
+	.tseg2_min = 1,
+	.tseg2_max = 4,
+	.sjw_max = 2,
 	.brp_min = 1,
-	.brp_max = 256,
+	.brp_max = 128,
 	.brp_inc = 1,
 };
 
@@ -643,6 +651,11 @@ static void flexcan_set_bittiming(struct net_device *dev)
 		 FLEXCAN_CTRL_SMP |
 		 FLEXCAN_CTRL_LOM);
 
+	// reg |= FLEXCAN_CTRL_PRESDIV(bt->brp - 1) |
+	// 	FLEXCAN_CTRL_PSEG1(bt->phase_seg1 - 1) |
+	// 	FLEXCAN_CTRL_PSEG2(bt->phase_seg2 - 1) |
+	// 	FLEXCAN_CTRL_RJW(bt->sjw - 1) |
+	// 	FLEXCAN_CTRL_PROPSEG(bt->prop_seg - 1);
 	reg |= FLEXCAN_CTRL_PRESDIV(bt->brp - 1) |
 		FLEXCAN_CTRL_PSEG1(bt->phase_seg1 - 1) |
 		FLEXCAN_CTRL_PSEG2(bt->phase_seg2 - 1) |
@@ -709,11 +722,7 @@ static int flexcan_chip_start(struct net_device *dev)
 	 *
 	 */
 	reg_mcr = readl(&regs->mcr);
-	// reg_mcr |= FLEXCAN_MCR_FRZ | FLEXCAN_MCR_FEN | FLEXCAN_MCR_HALT |
-	// 	FLEXCAN_MCR_SUPV | FLEXCAN_MCR_WRN_EN |
-	// 	FLEXCAN_MCR_IDAM_C | FLEXCAN_MCR_WAK_MSK |
-	// 	FLEXCAN_MCR_SLF_WAK;
-	reg_mcr |= FLEXCAN_MCR_FRZ | FLEXCAN_MCR_HALT |
+	reg_mcr |= FLEXCAN_MCR_FRZ | FLEXCAN_MCR_FEN | FLEXCAN_MCR_HALT |
 		FLEXCAN_MCR_SUPV | FLEXCAN_MCR_WRN_EN |
 		FLEXCAN_MCR_IDAM_C | FLEXCAN_MCR_WAK_MSK |
 		FLEXCAN_MCR_SLF_WAK;
