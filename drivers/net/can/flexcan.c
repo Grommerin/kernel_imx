@@ -687,7 +687,7 @@ static int flexcan_chip_start(struct net_device *dev)
 {
 	struct flexcan_priv *priv = netdev_priv(dev);
 	struct flexcan_regs __iomem *regs = priv->base;
-	unsigned int i;
+	// unsigned int i;
 	int err;
 	u32 reg_mcr, reg_ctrl;
 
@@ -755,15 +755,17 @@ static int flexcan_chip_start(struct net_device *dev)
 	dev_dbg(dev->dev.parent, "%s: writing ctrl=0x%08x", __func__, reg_ctrl);
 	writel(reg_ctrl, &regs->ctrl);
 
-	for (i = 0; i < ARRAY_SIZE(regs->cantxfg); i++) {
-		writel(0, &regs->cantxfg[i].can_ctrl);
-		writel(0, &regs->cantxfg[i].can_id);
-		writel(0, &regs->cantxfg[i].data[0]);
-		writel(0, &regs->cantxfg[i].data[1]);
+	/* Next comment 5+3 strings & 1 snring in function start - some patch http://osdir.com/ml/kernel-team/2013-10/msg01028.html
+	// for (i = 0; i < ARRAY_SIZE(regs->cantxfg); i++) {
+	// 	writel(0, &regs->cantxfg[i].can_ctrl);
+	// 	writel(0, &regs->cantxfg[i].can_id);
+	// 	writel(0, &regs->cantxfg[i].data[0]);
+	// 	writel(0, &regs->cantxfg[i].data[1]);
 
-		/* put MB into rx queue */
-		writel(FLEXCAN_MB_CNT_CODE(0x4), &regs->cantxfg[i].can_ctrl);
-	}
+	// 	/* put MB into rx queue */
+	// 	writel(FLEXCAN_MB_CNT_CODE(0x4), &regs->cantxfg[i].can_ctrl);
+	// }
+
 
 	/* acceptance mask/acceptance code (accept everything) */
 	writel(0x0, &regs->rxgmask);
