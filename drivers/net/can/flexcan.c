@@ -214,7 +214,7 @@ static struct can_bittiming_const flexcan_bittiming_const = {
 	.tseg2_max = 4,
 	.sjw_max = 2,
 	.brp_min = 1,
-	.brp_max = 8,
+	.brp_max = 4,
 	.brp_inc = 1,
 };
 
