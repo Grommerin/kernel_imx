@@ -198,23 +198,24 @@ struct flexcan_priv {
 };
 
 static struct can_bittiming_const flexcan_bittiming_const = {
-	.name = DRV_NAME,
-	.tseg1_min = 4,
-	.tseg1_max = 16,
-	.tseg2_min = 2,
-	.tseg2_max = 8,
-	.sjw_max = 4,
-	.brp_min = 1,
-	.brp_max = 256,
-	.brp_inc = 1,
-	// .tseg1_min = 2,
-	// .tseg1_max = 8,
-	// .tseg2_min = 1,
-	// .tseg2_max = 4,
-	// .sjw_max = 2,
+	// .name = DRV_NAME,
+	// .tseg1_min = 4,
+	// .tseg1_max = 16,
+	// .tseg2_min = 2,
+	// .tseg2_max = 8,
+	// .sjw_max = 4,
 	// .brp_min = 1,
-	// .brp_max = 128,
+	// .brp_max = 256,
 	// .brp_inc = 1,
+	.name = DRV_NAME,
+	.tseg1_min = 1,
+	.tseg1_max = 4,
+	.tseg2_min = 1,
+	.tseg2_max = 4,
+	.sjw_max = 2,
+	.brp_min = 1,
+	.brp_max = 8,
+	.brp_inc = 1,
 };
 
 /*
@@ -618,6 +619,7 @@ static irqreturn_t flexcan_irq(int irq, void *dev_id)
 		writel(FLEXCAN_IFLAG_RX_FIFO_OVERFLOW, &regs->iflag1);
 		dev->stats.rx_over_errors++;
 		dev->stats.rx_errors++;
+		dev_info(dev->dev.parent, "Rx FIFO Overflow\n");
 	}
 
 	/* transmission complete interrupt */
@@ -648,11 +650,6 @@ static void flexcan_set_bittiming(struct net_device *dev)
 		 FLEXCAN_CTRL_SMP |
 		 FLEXCAN_CTRL_LOM);
 
-	// reg |= FLEXCAN_CTRL_PRESDIV(bt->brp - 1) |
-	// 	FLEXCAN_CTRL_PSEG1(bt->phase_seg1 - 1) |
-	// 	FLEXCAN_CTRL_PSEG2(bt->phase_seg2 - 1) |
-	// 	FLEXCAN_CTRL_RJW(bt->sjw - 1) |
-	// 	FLEXCAN_CTRL_PROPSEG(bt->prop_seg - 1);
 	reg |= FLEXCAN_CTRL_PRESDIV(bt->brp - 1) |
 		FLEXCAN_CTRL_PSEG1(bt->phase_seg1 - 1) |
 		FLEXCAN_CTRL_PSEG2(bt->phase_seg2 - 1) |
@@ -744,8 +741,10 @@ static int flexcan_chip_start(struct net_device *dev)
 	 */
 	reg_ctrl = readl(&regs->ctrl);
 	reg_ctrl &= ~FLEXCAN_CTRL_TSYN;
+	// reg_ctrl |= FLEXCAN_CTRL_BOFF_REC | FLEXCAN_CTRL_LBUF |
+	// 	FLEXCAN_CTRL_ERR_STATE | FLEXCAN_CTRL_ERR_MSK;
 	reg_ctrl |= FLEXCAN_CTRL_BOFF_REC | FLEXCAN_CTRL_LBUF |
-		FLEXCAN_CTRL_ERR_STATE | FLEXCAN_CTRL_ERR_MSK;
+		FLEXCAN_CTRL_ERR_STATE;
 
 	/* save for later use */
 	priv->reg_ctrl_default = reg_ctrl;
