@@ -42,7 +42,7 @@
 #include <mach/iomux-v3.h>
 #endif
 
-#define DRV_NAME			"flexcan_strim_mod"
+#define DRV_NAME			"flexcan"
 
 /* 8 for RX fifo and 2 error handling */
 #define FLEXCAN_NAPI_WEIGHT		(8 + 2)
@@ -66,7 +66,7 @@
 #define FLEXCAN_MCR_BCC			BIT(16)
 #define FLEXCAN_MCR_LPRIO_EN		BIT(13)
 #define FLEXCAN_MCR_AEN			BIT(12)
-#define FLEXCAN_MCR_MAXMB(x)		((x) & 0x1f)
+#define FLEXCAN_MCR_MAXMB(x)		((x) & 0xf)
 #define FLEXCAN_MCR_IDAM_A		(0 << 8)
 #define FLEXCAN_MCR_IDAM_B		(1 << 8)
 #define FLEXCAN_MCR_IDAM_C		(2 << 8)
@@ -198,35 +198,15 @@ struct flexcan_priv {
 };
 
 static struct can_bittiming_const flexcan_bittiming_const = {
-	// /* Default timimings */
-	// .name = DRV_NAME,
-	// .tseg1_min = 4,
-	// .tseg1_max = 16,
-	// .tseg2_min = 2,
-	// .tseg2_max = 8,
-	// .sjw_max = 4,
-	// .brp_min = 1,
-	// .brp_max = 256,
-	// .brp_inc = 1,
 	.name = DRV_NAME,
-	.tseg1_min = 1,
-	.tseg1_max = 4,
-	.tseg2_min = 1,
-	.tseg2_max = 2,
-	.sjw_max = 2,
+	.tseg1_min = 4,
+	.tseg1_max = 16,
+	.tseg2_min = 2,
+	.tseg2_max = 8,
+	.sjw_max = 4,
 	.brp_min = 1,
-	.brp_max = 32,
+	.brp_max = 256,
 	.brp_inc = 1,
-	/* Very low timings */
-	// .name = DRV_NAME,
-	// .tseg1_min = 1,
-	// .tseg1_max = 4,
-	// .tseg2_min = 1,
-	// .tseg2_max = 4,
-	// .sjw_max = 2,
-	// .brp_min = 1,
-	// .brp_max = 4,
-	// .brp_inc = 1,
 };
 
 /*
@@ -630,7 +610,6 @@ static irqreturn_t flexcan_irq(int irq, void *dev_id)
 		writel(FLEXCAN_IFLAG_RX_FIFO_OVERFLOW, &regs->iflag1);
 		dev->stats.rx_over_errors++;
 		dev->stats.rx_errors++;
-		dev_info(dev->dev.parent, "Rx FIFO Overflow\n");
 	}
 
 	/* transmission complete interrupt */
@@ -752,27 +731,23 @@ static int flexcan_chip_start(struct net_device *dev)
 	 */
 	reg_ctrl = readl(&regs->ctrl);
 	reg_ctrl &= ~FLEXCAN_CTRL_TSYN;
-	// reg_ctrl |= FLEXCAN_CTRL_BOFF_REC | FLEXCAN_CTRL_LBUF |
-	// 	FLEXCAN_CTRL_ERR_STATE | FLEXCAN_CTRL_ERR_MSK;
-	reg_ctrl |= FLEXCAN_CTRL_BOFF_REC | FLEXCAN_CTRL_LBUF|
-		FLEXCAN_CTRL_ERR_STATE;
+	reg_ctrl |= FLEXCAN_CTRL_BOFF_REC | FLEXCAN_CTRL_LBUF |
+		FLEXCAN_CTRL_ERR_STATE | FLEXCAN_CTRL_ERR_MSK;
 
 	/* save for later use */
 	priv->reg_ctrl_default = reg_ctrl;
 	dev_dbg(dev->dev.parent, "%s: writing ctrl=0x%08x", __func__, reg_ctrl);
 	writel(reg_ctrl, &regs->ctrl);
 
-	/* Next comment 5+3 strings & 1 snring in function start - some patch http://osdir.com/ml/kernel-team/2013-10/msg01028.html */
 	for (i = 0; i < ARRAY_SIZE(regs->cantxfg); i++) {
 		writel(0, &regs->cantxfg[i].can_ctrl);
 		writel(0, &regs->cantxfg[i].can_id);
 		writel(0, &regs->cantxfg[i].data[0]);
 		writel(0, &regs->cantxfg[i].data[1]);
 
-	// 	/* put MB into rx queue */
+		/* put MB into rx queue */
 		writel(FLEXCAN_MB_CNT_CODE(0x4), &regs->cantxfg[i].can_ctrl);
 	}
-
 
 	/* acceptance mask/acceptance code (accept everything) */
 	writel(0x0, &regs->rxgmask);
@@ -1144,7 +1119,7 @@ static struct platform_driver flexcan_driver = {
 
 static int __init flexcan_init(void)
 {
-	pr_info("%s netdevice O_O driver\n", DRV_NAME);
+	pr_info("%s netdevice driver\n", DRV_NAME);
 	return platform_driver_register(&flexcan_driver);
 }
 
