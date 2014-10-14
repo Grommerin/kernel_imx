@@ -42,7 +42,7 @@
 #include <mach/iomux-v3.h>
 #endif
 
-#define DRV_NAME			"flexcan"
+#define DRV_NAME			"flexcan_strim"
 
 /* 8 for RX fifo and 2 error handling */
 #define FLEXCAN_NAPI_WEIGHT		(8 + 2)
@@ -199,8 +199,8 @@ struct flexcan_priv {
 
 static struct can_bittiming_const flexcan_bittiming_const = {
 	.name = DRV_NAME,
-	.tseg1_min = 4,
-	.tseg1_max = 16,
+	.tseg1_min = 2,
+	.tseg1_max = 8,
 	.tseg2_min = 2,
 	.tseg2_max = 8,
 	.sjw_max = 4,
