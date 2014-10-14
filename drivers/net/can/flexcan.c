@@ -199,10 +199,10 @@ struct flexcan_priv {
 
 static struct can_bittiming_const flexcan_bittiming_const = {
 	.name = DRV_NAME,
-	.tseg1_min = 1,
-	.tseg1_max = 4,
-	.tseg2_min = 2,
-	.tseg2_max = 8,
+	.tseg1_min = 4,
+	.tseg1_max = 16,
+	.tseg2_min = 1,
+	.tseg2_max = 4,
 	.sjw_max = 4,
 	.brp_min = 1,
 	.brp_max = 256,
