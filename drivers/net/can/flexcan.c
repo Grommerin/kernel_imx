@@ -198,15 +198,24 @@ struct flexcan_priv {
 };
 
 static struct can_bittiming_const flexcan_bittiming_const = {
-	/* Default timimings */
+	// /* Default timimings */
+	// .name = DRV_NAME,
+	// .tseg1_min = 4,
+	// .tseg1_max = 16,
+	// .tseg2_min = 2,
+	// .tseg2_max = 8,
+	// .sjw_max = 4,
+	// .brp_min = 1,
+	// .brp_max = 256,
+	// .brp_inc = 1,
 	.name = DRV_NAME,
-	.tseg1_min = 4,
-	.tseg1_max = 16,
-	.tseg2_min = 2,
-	.tseg2_max = 8,
-	.sjw_max = 4,
+	.tseg1_min = 2,
+	.tseg1_max = 8,
+	.tseg2_min = 1,
+	.tseg2_max = 4,
+	.sjw_max = 2,
 	.brp_min = 1,
-	.brp_max = 256,
+	.brp_max = 128,
 	.brp_inc = 1,
 	/* Very low timings */
 	// .name = DRV_NAME,
