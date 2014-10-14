@@ -215,7 +215,7 @@ static struct can_bittiming_const flexcan_bittiming_const = {
 	.tseg2_max = 2,
 	.sjw_max = 2,
 	.brp_min = 1,
-	.brp_max = 16,
+	.brp_max = 32,
 	.brp_inc = 1,
 	/* Very low timings */
 	// .name = DRV_NAME,
@@ -754,7 +754,8 @@ static int flexcan_chip_start(struct net_device *dev)
 	reg_ctrl &= ~FLEXCAN_CTRL_TSYN;
 	// reg_ctrl |= FLEXCAN_CTRL_BOFF_REC | FLEXCAN_CTRL_LBUF |
 	// 	FLEXCAN_CTRL_ERR_STATE | FLEXCAN_CTRL_ERR_MSK;
-	reg_ctrl |= FLEXCAN_CTRL_BOFF_REC | FLEXCAN_CTRL_LBUF;
+	reg_ctrl |= FLEXCAN_CTRL_BOFF_REC | FLEXCAN_CTRL_LBUF|
+		FLEXCAN_CTRL_ERR_STATE;
 
 	/* save for later use */
 	priv->reg_ctrl_default = reg_ctrl;
