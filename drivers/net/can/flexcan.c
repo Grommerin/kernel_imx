@@ -198,24 +198,26 @@ struct flexcan_priv {
 };
 
 static struct can_bittiming_const flexcan_bittiming_const = {
-	// .name = DRV_NAME,
-	// .tseg1_min = 4,
-	// .tseg1_max = 16,
-	// .tseg2_min = 2,
-	// .tseg2_max = 8,
-	// .sjw_max = 4,
-	// .brp_min = 1,
-	// .brp_max = 256,
-	// .brp_inc = 1,
+	/* Default timimings */
 	.name = DRV_NAME,
-	.tseg1_min = 1,
-	.tseg1_max = 4,
-	.tseg2_min = 1,
-	.tseg2_max = 4,
-	.sjw_max = 2,
+	.tseg1_min = 4,
+	.tseg1_max = 16,
+	.tseg2_min = 2,
+	.tseg2_max = 8,
+	.sjw_max = 4,
 	.brp_min = 1,
-	.brp_max = 4,
+	.brp_max = 256,
 	.brp_inc = 1,
+	/* Very low timings */
+	// .name = DRV_NAME,
+	// .tseg1_min = 1,
+	// .tseg1_max = 4,
+	// .tseg2_min = 1,
+	// .tseg2_max = 4,
+	// .sjw_max = 2,
+	// .brp_min = 1,
+	// .brp_max = 4,
+	// .brp_inc = 1,
 };
 
 /*
@@ -681,7 +683,7 @@ static int flexcan_chip_start(struct net_device *dev)
 {
 	struct flexcan_priv *priv = netdev_priv(dev);
 	struct flexcan_regs __iomem *regs = priv->base;
-	// unsigned int i;
+	unsigned int i;
 	int err;
 	u32 reg_mcr, reg_ctrl;
 
@@ -743,24 +745,23 @@ static int flexcan_chip_start(struct net_device *dev)
 	reg_ctrl &= ~FLEXCAN_CTRL_TSYN;
 	// reg_ctrl |= FLEXCAN_CTRL_BOFF_REC | FLEXCAN_CTRL_LBUF |
 	// 	FLEXCAN_CTRL_ERR_STATE | FLEXCAN_CTRL_ERR_MSK;
-	reg_ctrl |= FLEXCAN_CTRL_BOFF_REC | FLEXCAN_CTRL_LBUF |
-		FLEXCAN_CTRL_ERR_STATE;
+	reg_ctrl |= FLEXCAN_CTRL_BOFF_REC | FLEXCAN_CTRL_LBUF;
 
 	/* save for later use */
 	priv->reg_ctrl_default = reg_ctrl;
 	dev_dbg(dev->dev.parent, "%s: writing ctrl=0x%08x", __func__, reg_ctrl);
 	writel(reg_ctrl, &regs->ctrl);
 
-	/* Next comment 5+3 strings & 1 snring in function start - some patch http://osdir.com/ml/kernel-team/2013-10/msg01028.html
-	// for (i = 0; i < ARRAY_SIZE(regs->cantxfg); i++) {
-	// 	writel(0, &regs->cantxfg[i].can_ctrl);
-	// 	writel(0, &regs->cantxfg[i].can_id);
-	// 	writel(0, &regs->cantxfg[i].data[0]);
-	// 	writel(0, &regs->cantxfg[i].data[1]);
+	/* Next comment 5+3 strings & 1 snring in function start - some patch http://osdir.com/ml/kernel-team/2013-10/msg01028.html */
+	for (i = 0; i < ARRAY_SIZE(regs->cantxfg); i++) {
+		writel(0, &regs->cantxfg[i].can_ctrl);
+		writel(0, &regs->cantxfg[i].can_id);
+		writel(0, &regs->cantxfg[i].data[0]);
+		writel(0, &regs->cantxfg[i].data[1]);
 
 	// 	/* put MB into rx queue */
-	// 	writel(FLEXCAN_MB_CNT_CODE(0x4), &regs->cantxfg[i].can_ctrl);
-	// }
+		writel(FLEXCAN_MB_CNT_CODE(0x4), &regs->cantxfg[i].can_ctrl);
+	}
 
 
 	/* acceptance mask/acceptance code (accept everything) */
