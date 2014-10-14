@@ -215,7 +215,7 @@ static struct can_bittiming_const flexcan_bittiming_const = {
 	.tseg2_max = 1,
 	.sjw_max = 1,
 	.brp_min = 1,
-	.brp_max = 32,
+	.brp_max = 16,
 	.brp_inc = 1,
 	/* Very low timings */
 	// .name = DRV_NAME,
