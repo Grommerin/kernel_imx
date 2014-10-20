@@ -648,7 +648,7 @@ static void flexcan_set_bittiming(struct net_device *dev)
 
 	reg |= FLEXCAN_CTRL_PRESDIV(0x01) |
 		FLEXCAN_CTRL_PSEG1(0x07) |
-		FLEXCAN_CTRL_PSEG2(0x07) |
+		FLEXCAN_CTRL_PSEG2(0x01) |
 		FLEXCAN_CTRL_RJW(0x03) |
 		FLEXCAN_CTRL_PROPSEG(0x03);
 
