@@ -24,7 +24,7 @@
 
 #ifdef CONFIG_IPIPE
 
-#include <asm-generic/bitsperlong.h>
+#include <asm/bitsperlong.h>
 #include <mach/irq.h>
 
 #define IPIPE_NR_XIRQS		NR_IRQS

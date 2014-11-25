@@ -1,14 +1,14 @@
 /*
- * asm-generic/int-ll64.h
+ * asm-generic/int-l64.h
  *
- * Integer declarations for architectures which use "long long"
+ * Integer declarations for architectures which use "long"
  * for 64-bit types.
  */
 
-#ifndef _ASM_GENERIC_INT_LL64_H
-#define _ASM_GENERIC_INT_LL64_H
+#ifndef _ASM_GENERIC_INT_L64_H
+#define _ASM_GENERIC_INT_L64_H
 
-#include <asm-generic/bitsperlong.h>
+#include <asm/bitsperlong.h>
 
 #ifndef __ASSEMBLY__
 /*
@@ -25,13 +25,8 @@ typedef unsigned short __u16;
 typedef __signed__ int __s32;
 typedef unsigned int __u32;
 
-#ifdef __GNUC__
-__extension__ typedef __signed__ long long __s64;
-__extension__ typedef unsigned long long __u64;
-#else
-typedef __signed__ long long __s64;
-typedef unsigned long long __u64;
-#endif
+typedef __signed__ long __s64;
+typedef unsigned long __u64;
 
 #endif /* __ASSEMBLY__ */
 
@@ -48,8 +43,8 @@ typedef unsigned short u16;
 typedef signed int s32;
 typedef unsigned int u32;
 
-typedef signed long long s64;
-typedef unsigned long long u64;
+typedef signed long s64;
+typedef unsigned long u64;
 
 #define S8_C(x)  x
 #define U8_C(x)  x ## U
@@ -57,8 +52,8 @@ typedef unsigned long long u64;
 #define U16_C(x) x ## U
 #define S32_C(x) x
 #define U32_C(x) x ## U
-#define S64_C(x) x ## LL
-#define U64_C(x) x ## ULL
+#define S64_C(x) x ## L
+#define U64_C(x) x ## UL
 
 #else /* __ASSEMBLY__ */
 
@@ -75,4 +70,4 @@ typedef unsigned long long u64;
 
 #endif /* __KERNEL__ */
 
-#endif /* _ASM_GENERIC_INT_LL64_H */
+#endif /* _ASM_GENERIC_INT_L64_H */

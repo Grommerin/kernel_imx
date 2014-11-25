@@ -31,7 +31,7 @@
 #include <linux/perf_event.h>
 #include <linux/stringify.h>
 #include <linux/limits.h>
-#include <asm-generic/bitsperlong.h>
+#include <asm/bitsperlong.h>
 
 #include "trace.h"
 #include "trace_output.h"

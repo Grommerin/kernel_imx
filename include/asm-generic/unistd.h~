@@ -1,7 +1,7 @@
 #if !defined(_ASM_GENERIC_UNISTD_H) || defined(__SYSCALL)
 #define _ASM_GENERIC_UNISTD_H
 
-#include <asm-generic/bitsperlong.h>
+#include <asm/bitsperlong.h>
 
 /*
  * This file contains the system call numbers, based on the

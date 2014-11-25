@@ -34,7 +34,7 @@
 #include <asm/bitops.h>
 #include <asm/atomic.h>
 #include <asm/traps.h>
-#include <asm-generic/bitsperlong.h>
+#include <asm/bitsperlong.h>
 
 #define IPIPE_ARCH_STRING     "1.16-01"
 #define IPIPE_MAJOR_NUMBER    1
