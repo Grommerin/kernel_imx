@@ -42,10 +42,10 @@
 #include <mach/iomux-v3.h>
 #endif
 
-#define DRV_NAME			"flexcan_strim"
+#define DRV_NAME			"flexcan_strim_004"
 
 /* 8 for RX fifo and 2 error handling */
-#define FLEXCAN_NAPI_WEIGHT		(8 + 2)
+#define FLEXCAN_NAPI_WEIGHT		(62 + 2)
 
 /* FLEXCAN module configuration register (CANMCR) bits */
 #define FLEXCAN_MCR_MDIS		BIT(31)
@@ -201,8 +201,8 @@ static struct can_bittiming_const flexcan_bittiming_const = {
 	.name = DRV_NAME,
 	.tseg1_min = 2,
 	.tseg1_max = 8,
-	.tseg2_min = 1,
-	.tseg2_max = 4,
+	.tseg2_min = 2,
+	.tseg2_max = 8,
 	.sjw_max = 4,
 	.brp_min = 1,
 	.brp_max = 256,
@@ -573,16 +573,18 @@ static irqreturn_t flexcan_irq(int irq, void *dev_id)
 	struct flexcan_regs __iomem *regs = priv->base;
 	u32 reg_iflag1, reg_esr;
 
+	//pr_info("IRQ\n");
+
 	reg_iflag1 = readl(&regs->iflag1);
 	reg_esr = readl(&regs->esr);
-	writel(FLEXCAN_ESR_ERR_INT, &regs->esr);	/* ACK err IRQ */
+//	writel(FLEXCAN_ESR_ERR_INT, &regs->esr);	/* ACK err IRQ */
 
-	if (reg_esr & FLEXCAN_ESR_WAK_INT) {
-		/* first clear stop request then wakeup irq status */
-		if (priv->version >= FLEXCAN_VER_10_0_12)
-			mxc_iomux_set_gpr_register(13, 28, 1, 0);
-		writel(FLEXCAN_ESR_WAK_INT, &regs->esr);
-	}
+//	if (reg_esr & FLEXCAN_ESR_WAK_INT) {
+//		/* first clear stop request then wakeup irq status */
+//		if (priv->version >= FLEXCAN_VER_10_0_12)
+//			mxc_iomux_set_gpr_register(13, 28, 1, 0);
+//		writel(FLEXCAN_ESR_WAK_INT, &regs->esr);
+//	}
 
 	/*
 	 * schedule NAPI in case of:
@@ -608,6 +610,7 @@ static irqreturn_t flexcan_irq(int irq, void *dev_id)
 	/* FIFO overflow */
 	if (reg_iflag1 & FLEXCAN_IFLAG_RX_FIFO_OVERFLOW) {
 		writel(FLEXCAN_IFLAG_RX_FIFO_OVERFLOW, &regs->iflag1);
+		pr_info("RX overflow\n");		//Моя добавочка
 		dev->stats.rx_over_errors++;
 		dev->stats.rx_errors++;
 	}
@@ -640,17 +643,11 @@ static void flexcan_set_bittiming(struct net_device *dev)
 		 FLEXCAN_CTRL_SMP |
 		 FLEXCAN_CTRL_LOM);
 
-	// reg |= FLEXCAN_CTRL_PRESDIV(bt->brp - 1) |
-	// 	FLEXCAN_CTRL_PSEG1(bt->phase_seg1 - 1) |
-	// 	FLEXCAN_CTRL_PSEG2(bt->phase_seg2 - 1) |
-	// 	FLEXCAN_CTRL_RJW(bt->sjw - 1) |
-	// 	FLEXCAN_CTRL_PROPSEG(bt->prop_seg - 1);
-
-	reg |= FLEXCAN_CTRL_PRESDIV(0x01) |
-		FLEXCAN_CTRL_PSEG1(0x07) |
-		FLEXCAN_CTRL_PSEG2(0x01) |
-		FLEXCAN_CTRL_RJW(0x03) |
-		FLEXCAN_CTRL_PROPSEG(0x03);
+	reg |= FLEXCAN_CTRL_PRESDIV(bt->brp - 1) |
+		FLEXCAN_CTRL_PSEG1(bt->phase_seg1 - 1) |
+		FLEXCAN_CTRL_PSEG2(bt->phase_seg2 - 1) |
+		FLEXCAN_CTRL_RJW(bt->sjw - 1) |
+		FLEXCAN_CTRL_PROPSEG(bt->prop_seg - 1);
 
 	if (priv->can.ctrlmode & CAN_CTRLMODE_LOOPBACK)
 		reg |= FLEXCAN_CTRL_LPB;
@@ -712,10 +709,13 @@ static int flexcan_chip_start(struct net_device *dev)
 	 *
 	 */
 	reg_mcr = readl(&regs->mcr);
+	// reg_mcr |= FLEXCAN_MCR_FRZ | FLEXCAN_MCR_FEN | FLEXCAN_MCR_HALT |
+	// 	FLEXCAN_MCR_SUPV | FLEXCAN_MCR_WRN_EN |
+	// 	FLEXCAN_MCR_IDAM_C | FLEXCAN_MCR_WAK_MSK |
+	// 	FLEXCAN_MCR_SLF_WAK;
 	reg_mcr |= FLEXCAN_MCR_FRZ | FLEXCAN_MCR_FEN | FLEXCAN_MCR_HALT |
-		FLEXCAN_MCR_SUPV | FLEXCAN_MCR_WRN_EN |
-		FLEXCAN_MCR_IDAM_C | FLEXCAN_MCR_WAK_MSK |
-		FLEXCAN_MCR_SLF_WAK;
+		FLEXCAN_MCR_SUPV | FLEXCAN_MCR_WRN_EN |	FLEXCAN_MCR_IDAM_C;
+		
 	dev_dbg(dev->dev.parent, "%s: writing mcr=0x%08x", __func__, reg_mcr);
 	writel(reg_mcr, &regs->mcr);
 
@@ -738,7 +738,8 @@ static int flexcan_chip_start(struct net_device *dev)
 	reg_ctrl = readl(&regs->ctrl);
 	reg_ctrl &= ~FLEXCAN_CTRL_TSYN;
 	reg_ctrl |= FLEXCAN_CTRL_BOFF_REC | FLEXCAN_CTRL_LBUF |
-		FLEXCAN_CTRL_ERR_STATE | FLEXCAN_CTRL_ERR_MSK;
+	FLEXCAN_CTRL_ERR_STATE;
+	//FLEXCAN_CTRL_ERR_STATE | FLEXCAN_CTRL_ERR_MSK;
 
 	/* save for later use */
 	priv->reg_ctrl_default = reg_ctrl;
