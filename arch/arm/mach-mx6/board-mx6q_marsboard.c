@@ -132,9 +132,9 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 	/* CAN2 */
 	MX6Q_PAD_KEY_COL4__CAN2_TXCAN,
 	MX6Q_PAD_KEY_ROW4__CAN2_RXCAN,
-	MX6Q_PAD_GPIO_2__GPIO_1_3,		/* STNDBY */
-	MX6Q_PAD_GPIO_7__GPIO_1_8,		/* NERR */
-	MX6Q_PAD_GPIO_4__GPIO_1_5,		/* Enable */
+	MX6Q_PAD_GPIO_3__GPIO_1_3,		/* STNDBY */
+	MX6Q_PAD_GPIO_8__GPIO_1_8,		/* NERR */
+	MX6Q_PAD_GPIO_5__GPIO_1_5,		/* Enable */
 
 	/* CCM  */
 	MX6Q_PAD_GPIO_0__CCM_CLKO,		/* SGTL500 sys_mclk */
