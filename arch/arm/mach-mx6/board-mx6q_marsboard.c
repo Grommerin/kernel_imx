@@ -1383,7 +1383,7 @@ static void __init mx6_marsboard_board_init(void)
 		pr_err("failed to request flexcan-gpios: %d\n", ret);
 	else	{
 		imx6q_add_flexcan0(&mx6q_marsboard_flexcan0_pdata);
-		//imx6q_add_flexcan1(&mx6q_marsboard_flexcan1_pdata);
+		imx6q_add_flexcan1(&mx6q_marsboard_flexcan1_pdata);
 	}
 
 	clko2 = clk_get(NULL, "clko2_clk");
