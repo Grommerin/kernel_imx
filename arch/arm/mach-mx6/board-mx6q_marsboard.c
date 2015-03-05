@@ -87,11 +87,11 @@
 #define MX6Q_MARSBOARD_USB_HUB_RESET	IMX_GPIO_NR(7, 12)
 //#define MX6Q_MARSBOARD_CAN1_STBY	IMX_GPIO_NR(1, 2)
 #define MX6Q_MARSBOARD_CAN1_EN		IMX_GPIO_NR(1, 4)
-#define MX6Q_MARSBOARD_CAN1_STBY	IMX_GPIO_NR(1, 4)
+//#define MX6Q_MARSBOARD_CAN1_STBY	IMX_GPIO_NR(7, 4)
 #define MX6Q_MARSBOARD_CAN1_GPIO	IMX_GPIO_NR(1, 1)
 //#define MX6Q_MARSBOARD_CAN2_STBY	IMX_GPIO_NR(1, 3)
 #define MX6Q_MARSBOARD_CAN2_EN		IMX_GPIO_NR(1, 5)
-#define MX6Q_MARSBOARD_CAN2_STBY	IMX_GPIO_NR(1, 5)
+//#define MX6Q_MARSBOARD_CAN2_STBY	IMX_GPIO_NR(1, 5)
 #define MX6Q_MARSBOARD_CAN2_GPIO	IMX_GPIO_NR(1, 3)
 #define MX6Q_MARSBOARD_MENU_KEY		IMX_GPIO_NR(2, 1)
 #define MX6Q_MARSBOARD_BACK_KEY		IMX_GPIO_NR(2, 2)
@@ -842,19 +842,19 @@ static struct ahci_platform_data mx6q_marsboard_sata_data = {
 
 static struct gpio mx6q_marsboard_flexcan_gpios[] = {
 	{ MX6Q_MARSBOARD_CAN1_EN, GPIOF_OUT_INIT_LOW, "flexcan1-en" },
-	{ MX6Q_MARSBOARD_CAN1_STBY, GPIOF_OUT_INIT_LOW, "flexcan1-stby" },
+//	{ MX6Q_MARSBOARD_CAN1_STBY, GPIOF_OUT_INIT_LOW, "flexcan1-stby" },
 	{ MX6Q_MARSBOARD_CAN2_EN, GPIOF_OUT_INIT_LOW, "flexcan2-en" },
-	{ MX6Q_MARSBOARD_CAN2_STBY, GPIOF_OUT_INIT_LOW, "flexcan2-stby" },
+//	{ MX6Q_MARSBOARD_CAN2_STBY, GPIOF_OUT_INIT_LOW, "flexcan2-stby" },
 };
 
 static void mx6q_marsboard_flexcan0_switch(int enable)
 {
 	if (enable) {
 		gpio_set_value(MX6Q_MARSBOARD_CAN1_EN, 1);
-		gpio_set_value(MX6Q_MARSBOARD_CAN1_STBY, 1);
+//		gpio_set_value(MX6Q_MARSBOARD_CAN1_STBY, 1);
 	} else {
 		gpio_set_value(MX6Q_MARSBOARD_CAN1_EN, 0);
-		gpio_set_value(MX6Q_MARSBOARD_CAN1_STBY, 0);
+//		gpio_set_value(MX6Q_MARSBOARD_CAN1_STBY, 0);
 	}
 }
 
@@ -879,10 +879,10 @@ static void mx6q_marsboard_flexcan1_switch(int enable)
 {
 	if (enable) {
 		gpio_set_value(MX6Q_MARSBOARD_CAN2_EN, 1);
-		gpio_set_value(MX6Q_MARSBOARD_CAN2_STBY, 1);
+//		gpio_set_value(MX6Q_MARSBOARD_CAN2_STBY, 1);
 	} else {
 		gpio_set_value(MX6Q_MARSBOARD_CAN2_EN, 0);
-		gpio_set_value(MX6Q_MARSBOARD_CAN2_STBY, 0);
+//		gpio_set_value(MX6Q_MARSBOARD_CAN2_STBY, 0);
 	}
 }
 
