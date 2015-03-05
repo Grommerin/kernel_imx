@@ -15,6 +15,7 @@
  */
 struct flexcan_platform_data {
 	void (*transceiver_switch)(int enable);
+	void (*gpio_switch)(int enable);
 };
 
 #endif /* __CAN_PLATFORM_FLEXCAN_H */
