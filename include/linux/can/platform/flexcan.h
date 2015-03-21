@@ -10,7 +10,8 @@
 
 /**
  * struct flexcan_platform_data - flex CAN controller platform data
- * @transceiver_enable:         - called to power on/off the transceiver
+ * @transceiver_switch:         - called to power on/off the transceiver
+ * @gpio_switch:         		- called to power on/off the gpio indicator
  *
  */
 struct flexcan_platform_data {
