@@ -142,7 +142,7 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 	/* My GPIO */
 	MX6Q_PAD_GPIO_1__GPIO_1_1,
 	MX6Q_PAD_GPIO_3__GPIO_1_3,
-	MX6Q_PAD_GPIO_11__GPIO_2_11,
+	MX6Q_PAD_SD4_DAT3__GPIO_2_11,
 
 	/* CCM  */
 	MX6Q_PAD_GPIO_0__CCM_CLKO,		/* SGTL500 sys_mclk */
