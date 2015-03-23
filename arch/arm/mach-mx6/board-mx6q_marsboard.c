@@ -871,19 +871,23 @@ static void mx6q_marsboard_flexcan0_switch(int enable)
 
 static void mx6q_marsboard_flexcan0_gpio_switch(int enable)
 {
+/*
 	if (enable) {
 		gpio_set_value(MX6Q_MARSBOARD_CAN1_GPIO, 1);
 	} else {
 		gpio_set_value(MX6Q_MARSBOARD_CAN1_GPIO, 0);
 	}
+*/
 }
 static void mx6q_marsboard_flexcan1_gpio_switch(int enable)
 {
+/*
 	if (enable) {
 		gpio_set_value(MX6Q_MARSBOARD_CAN2_GPIO, 1);
 	} else {
 		gpio_set_value(MX6Q_MARSBOARD_CAN2_GPIO, 0);
 	}
+*/
 }
 
 static void mx6q_marsboard_flexcan1_switch(int enable)
