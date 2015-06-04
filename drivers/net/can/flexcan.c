@@ -1,28 +1,28 @@
-/*
- * flexcan.c - FLEXCAN CAN controller driver
- *
- * Copyright (c) 2005-2006 Varma Electronics Oy
- * Copyright (c) 2009 Sascha Hauer, Pengutronix
- * Copyright (c) 2010 Marc Kleine-Budde, Pengutronix
- * Copyright (c) 2015 Mikita Dzivakou, Strim-tech
- *
- * Based on code originally by Andrey Volkov <avolkov@varma-el.com>
- *
- * LICENCE:
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation version 2.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
+/**
+ * @file flexcan.c
+ * @brief FLEXCAN CAN controller driver
+ * @details This file is driver for work with flexcan controller
+ * @version 1.1.25
+ * @date 04.04.2015
+ * @author Mikita Dzivakou
+ * @copyright (c) 2005-2006 Varma Electronics Oy
+ * @copyright (c) 2009 Sascha Hauer, Pengutronix
+ * @copyright (c) 2010 Marc Kleine-Budde, Pengutronix
+ * @copyright (c) 2015 Mikita Dzivakou, Strim-tech
+ * @verbatim
+   LICENCE:
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License as
+   published by the Free Software Foundation version 2.
+   
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+ * @endverbatim
  */
 
-#include <linux/netdevice.h>
-#include <linux/can.h>
-#include <linux/can/dev.h>
+// #include <linux/netdevice.h>
 #include <linux/can/error.h>
 #include <linux/can/platform/flexcan.h>
 #include <linux/clk.h>
@@ -46,6 +46,7 @@
 #include <linux/kdev_t.h>
 #include <linux/version.h>
 #include <asm/io.h>
+#include <linux/string.h>
 
 #include <mach/clock.h>
 #include <mach/hardware.h>
@@ -57,7 +58,7 @@
 #endif
 
 #define DRV_NAME		"flexcan"
-#define DRV_VER			"1.1.41" 
+#define DRV_VER			"1.2.25" 
 
 /* 6 for RX fifo and 2 error handling */
 #define FLEXCAN_NAPI_WEIGHT				(6 + 1)
@@ -155,32 +156,33 @@
 #define FLEXCAN_MB_CODE_MASK 			(0xf0ffffff)
 
 
-#define STRIM_FLEXCAN_BTRT_1000_SP866	0x01290005
-#define STRIM_FLEXCAN_BTRT_1000_SP800	0x012a0004
-#define STRIM_FLEXCAN_BTRT_1000_SP733	0x01230004
-#define STRIM_FLEXCAN_BTRT_1000_SP700	0x02120002
+#define FLEXCAN_BTRT_1000_SP866		(0x01290005)
+#define FLEXCAN_BTRT_1000_SP800		(0x012a0004)
+#define FLEXCAN_BTRT_1000_SP733		(0x01230004)
+#define FLEXCAN_BTRT_1000_SP700		(0x02120002)
 
-#define STRIM_FLEXCAN_BTRT_1000			0x012a0004
-#define STRIM_FLEXCAN_BTRT_500			0x0
-#define STRIM_FLEXCAN_BTRT_250			0x0
-#define STRIM_FLEXCAN_BTRT_125			0x0
-#define STRIM_FLEXCAN_BTRT_100			0x0
+#define FLEXCAN_BTRT_1000			(0x01290005)
+#define FLEXCAN_BTRT_500			(0x023b0006)		/* Предварительно, настройка рассчитана через canconfig */
+#define FLEXCAN_BTRT_250			(0x053b0006)		/* Предварительно, настройка рассчитана через canconfig */
+#define FLEXCAN_BTRT_125			(0x0b3b0006)		/* Предварительно, настройка рассчитана через canconfig */
+#define FLEXCAN_BTRT_100			(0x0e3b0006)		/* Предварительно, настройка рассчитана через canconfig */
+#define FLEXCAN_BTRT_DFLT			FLEXCAN_BTRT_1000
 
-#define STRIM_FLEXCAN_BTRT_MASK		0xFFFF0007
+#define FLEXCAN_BTRT_MASK			(0xFFFF0007)
 
+#define DEV_FIRST  					(0) 
+#define DEV_COUNT  					(2) 
 
-#define DEFAULT_USR_BUF_SIZE	65536
+#define BUF_RECV_CAP				(65536)
+#define BUF_SEND_CAP				(64)
 
-#define BUF_LENGTH				256 			//сделать не через define
-#define CIRCLE_BUF_CAP			(524288)		//сделать не через define
-#define FLEX_BUF_CAP			(65536)
+#define BUF_RECV_MASK				(fimx6d.f_dev[dev_num].buf_recv_size - 1)
+#define BUF_SEND_MASK				(fimx6d.f_dev[dev_num].buf_send_size - 1)
 
-#define DEV_FIRST  				0 
-#define DEV_COUNT  				2 
+#define TYPE_BUF_RECV				(0x0F)
+#define TYPE_BUF_SEND				(0xF0)
 
-#define BUF_MASK				(fimx6d.f_dev[(*dev_num)].frame_buf_size - 1)
-
-#define IRQ_BASE				142
+#define IRQ_BASE					(142)
 
 /* Structure of the hardware registers */
 struct flexcan_regs {
@@ -213,20 +215,6 @@ enum flexcan_ip_version {
 	FLEXCAN_VER_10_0_12,
 };
 
-struct flexcan_priv {
-	struct can_priv can;
-	struct net_device *dev;
-	struct napi_struct napi;
-
-	void __iomem *base;
-	u32 reg_esr;
-	u32 reg_ctrl_default;
-
-	struct clk *clk;
-	struct flexcan_platform_data *pdata;
-	enum flexcan_ip_version version;
-};
-
 static struct can_bittiming_const flexcan_bittiming_const = {
 	.name = DRV_NAME,
 	.tseg1_min = 4,
@@ -243,182 +231,461 @@ typedef struct {
 	unsigned int n_first, n_last;
 } circle_buf_t;
 
+struct flexcan_frame_mb {
+	struct flexcan_mb mb;
+	struct timeval time;
+};
+
 struct flexcan_chardev {
-	char name[IFNAMSIZ];		// имя файла устройства в /dev/
+/*
+ * Имя устройства.
+ * Это же имя отдается файлу устройства в /dev и /proc
+ */
+	char name[IFNAMSIZ];
+/*
+ * Содержит major и minor номер зарегистрированного устройства
+ * Номера извлекаются макросами MAJOR(dev_t devt) и MINOR(dev_t devt)
+ * Номер формируется при регистрации устройства автоматически
+ * Так же формируется макросом MKDEV(major, minor)
+ */
 	dev_t f_devt;				// major и minor номера устройства
+/*
+ * Адрес начала блока памяти устройства
+ * Сохраняется при регистрации устройства
+ * Используется для чтения регистров устройства с помощью struct flexcan_regs
+ */
+	void __iomem *f_base;
+/*
+ * Номер вектора прерывания для устройства
+ */
 	u8 irq_num;					// IRQ номер
-	u8 is_open;					// флаг открытия
-	u32 frame_buf_size;
 
-	struct cdev f_cdev;				
+/*
+ * Флаг открытия файла устройства
+ * Нужен для предотвращения множественного доступа к файлу
+ * (а еще для запрета удаления драйвера при открытом файле, но не реализовано)
+ */
+	u8 is_open;					// флаг открытия файла
+/*
+ * Значение регистра CTRL для настройки скорости передачи и режима работы
+ * При инициализации устанавливается значение по умолчанию FLEXCAN_BTRT_DFLT
+ * Изменяется через IOCTL запрос
+ */
+	u32 reg_ctrl_bittiming;
+/*
+ * Значение по умолчанию регистра CTRL для будущих использований
+ * Создается в функции chip_start
+ */
+	u32 reg_ctrl_default;
+
+/*
+ * Структура символьного утсройства.
+ */
+	struct cdev f_cdev;	
+/*
+ * Указатель на структуру встроенного в контроллер устройства flexcan
+ */			
 	struct flexcan_platform_data *pdata;
+/*
+ * Структура с данными файла устройства в файловой системе /proc 
+ */
+	struct proc_dir_entry *dev_proc_file;
 
+/*
+ * Структура с данными по тактированию устройства
+ */
 	struct clk *clk;
+/*
+ * Структура с данными о настройках таймингов устройства
+ */
 	struct can_bittiming bittiming;
+/*
+ * Структура с данными о состоянии и работе устройства
+ * Содержит различные счетчики и переменные состояния устройства
+ */
 	struct flexcan_stats stats;
-	enum can_state state;
 
-	circle_buf_t frame_buf;
-	struct flexcan_frame buf[FLEX_BUF_CAP];
+/*
+ * Размер буфера для сохранения принятых сообщений
+ */
+	u32 buf_recv_size;
+/*
+ * Номера ячеек для записи и чтения циклического буффера для сохранения
+ */
+	circle_buf_t frame_buf_recv;
+/*
+ * Циклический буффер для сохранения принятых сообщений
+ */
+	struct flexcan_frame_mb buf_recv[BUF_RECV_CAP];
+
+/*
+ * Размер буфера для сохранения сообщений на отправку
+ */
+	u32 buf_send_size;
+/*
+ * Номера ячеек для записи и чтения циклического буффера сообщений на отправку
+ */
+	circle_buf_t frame_buf_send;
+/*
+ * Циклический буффер для сохранения сообщений на отправку
+ */
+	struct can_frame buf_send[BUF_SEND_CAP];
 
 	// int (*do_set_bittiming)(__u8 *dev_num, struct can_bittiming *bittiming);
-	// int (*do_set_mode)(__u8 *dev_num, enum can_mode mode);					// вернуть когда буду убирать netdevice
+	int (*do_set_mode)(__u8 *dev_num, enum can_mode mode);					// вернуть когда буду убирать netdevice
 	// int (*do_get_state)(__u8 *dev_num, enum can_state *state);
-	// int (*do_get_berr_counter)(__u8 *dev_num, struct flexcan_stats *bec);
+	int (*do_get_berr_counter)(__u8 *dev_num, struct flexcan_stats *bec);
 };
 
 struct flexcan_device	{
-	char name[PLATFORM_NAME_SIZE];	
-	void __iomem *f_base;					
+	char name[PLATFORM_NAME_SIZE];						
 	u8 is_init;					// флаг инициализации
-	u32 major;						// major номер группы устройств
+	dev_t f_devt;				// major номер группы
 
 	enum flexcan_ip_version version;
+
+	struct proc_dir_entry *dev_proc_dir;
 	struct class *f_class;	
 	struct flexcan_chardev f_dev[DEV_COUNT];
 };
 
 static struct flexcan_device fimx6d;
 
-static void pp(char *p,...){}
-static void (*my_debug)(char *p,...) = pp;
-// static void (*my_debug)(char *p,...) = printk;
+//static void pp(char *p,...){}
+//static void (*my_debug)(char *p,...) = pp;
+// static void (*// 1my_debug)(char *p,...) = printk;
+
+static unsigned int flexcan_start_transmit(u8 dev_num);
+static void flexcan_set_bittiming(const u8 dev_num, const u32 reg_ctrl);
+static void flexcan_chip_stop(const u8 dev_num);
+static int flexcan_chip_start(const u8 dev_num);
 
 //-----------------------------------------------------------------------------------------------------------------------
 
-static inline unsigned int flexcan_buf_is_empty(u8 *dev_num)
+// ######################################################################################################################
+// ##############################	Чисто временная мера, потом вернуть код на место!!!	  ###############################
+// ######################################################################################################################
+// #include "code_buf.c"
+static inline unsigned int flexcan_recv_buf_is_empty(u8 dev_num)
 {
-	return (fimx6d.f_dev[(*dev_num)].frame_buf.n_first == fimx6d.f_dev[(*dev_num)].frame_buf.n_last);
+	return (fimx6d.f_dev[dev_num].frame_buf_recv.n_first == fimx6d.f_dev[dev_num].frame_buf_recv.n_last);
+}
+static inline unsigned int flexcan_send_buf_is_empty(u8 dev_num)
+{
+	return (fimx6d.f_dev[dev_num].frame_buf_send.n_first == fimx6d.f_dev[dev_num].frame_buf_send.n_last);
 }
 
-static inline unsigned int flexcan_buf_is_full(u8 *dev_num)
+static inline unsigned int flexcan_recv_buf_is_full(u8 dev_num)
 {
-	unsigned int n_next_first = (fimx6d.f_dev[(*dev_num)].frame_buf.n_first + 1) & BUF_MASK;
-	return (n_next_first == fimx6d.f_dev[(*dev_num)].frame_buf.n_last);
+	unsigned int n_next_first = (fimx6d.f_dev[dev_num].frame_buf_recv.n_first + 1) & BUF_RECV_MASK;
+	return (n_next_first == fimx6d.f_dev[dev_num].frame_buf_recv.n_last);
+}
+static inline unsigned int flexcan_send_buf_is_full(u8 dev_num)
+{
+	unsigned int n_next_first = (fimx6d.f_dev[dev_num].frame_buf_send.n_first + 1) & BUF_SEND_MASK;
+	return (n_next_first == fimx6d.f_dev[dev_num].frame_buf_send.n_last);
 }
 
-static inline unsigned int flexcan_buf_push(u8 *dev_num, struct flexcan_mb *s_mb, struct timeval *s_time)
+static inline unsigned int flexcan_recv_buf_push(u8 dev_num, const struct flexcan_mb *s_mb, const struct timeval *s_tv)
 {
-	circle_buf_t *f_buf = &fimx6d.f_dev[(*dev_num)].frame_buf;
-	unsigned int n_next_first = (f_buf->n_first + 1) & BUF_MASK;
-
-	if(flexcan_buf_is_full(dev_num)) 	{
+	if(flexcan_recv_buf_is_full(dev_num)) 	{
 		return 1;
 	}
-	struct flexcan_frame *buf = (struct flexcan_frame *) (fimx6d.f_dev[*dev_num].buf + f_buf->n_first);
-	memcpy(&(buf->mb), s_mb, sizeof(struct flexcan_mb));
-	memcpy(&(buf->time), s_time, sizeof(struct timeval));
 
-	f_buf->n_first = n_next_first;
+	struct flexcan_frame_mb *buf = (struct flexcan_frame_mb *) (fimx6d.f_dev[dev_num].buf_recv + fimx6d.f_dev[dev_num].frame_buf_recv.n_first);
+	memcpy(&buf->mb, s_mb, sizeof(struct flexcan_mb));
+	memcpy(&buf->time, s_tv, sizeof(struct timeval));
+
+	fimx6d.f_dev[dev_num].frame_buf_recv.n_first = (fimx6d.f_dev[dev_num].frame_buf_recv.n_first + 1) & BUF_RECV_MASK;
+
+	return 0;
+}
+static inline unsigned int flexcan_send_buf_push(u8 dev_num, const struct can_frame *s_cf)
+{
+	circle_buf_t *f_buf = &fimx6d.f_dev[dev_num].frame_buf_send;
+	unsigned int n_next_first = (f_buf->n_first + 1) & BUF_SEND_MASK;
+
+	unsigned int buf_ret = flexcan_send_buf_is_full(dev_num);
+	if(buf_ret) 	{
+		return 1;
+	}
+	else 	{
+		struct can_frame *buf = (struct can_frame *) (fimx6d.f_dev[dev_num].buf_send + f_buf->n_first);
+		memcpy(buf, s_cf, sizeof(struct can_frame));
+
+		f_buf->n_first = n_next_first;
+	}
+
 	return 0;
 }
 
-static inline unsigned int flexcan_buf_pop(u8 *dev_num, struct flexcan_frame *s_frame)
+static inline unsigned int flexcan_recv_buf_pop(u8 dev_num, struct flexcan_frame_mb *s_frame)
 {
-	circle_buf_t *f_buf = &fimx6d.f_dev[(*dev_num)].frame_buf;
+	circle_buf_t *f_buf = &fimx6d.f_dev[dev_num].frame_buf_recv;
 
-	if(flexcan_buf_is_empty(dev_num))	{
+	unsigned int buf_ret = flexcan_recv_buf_is_empty(dev_num);
+	if(buf_ret)	{
 		return 1;
 	}
-	*s_frame = *(struct flexcan_frame *) (fimx6d.f_dev[*dev_num].buf + f_buf->n_last);
-	f_buf->n_last = (f_buf->n_last + 1) & BUF_MASK;
+	else 	{
+		*(struct flexcan_frame_mb *) s_frame = *(struct flexcan_frame_mb *) (fimx6d.f_dev[dev_num].buf_recv + f_buf->n_last);
+		f_buf->n_last = (f_buf->n_last + 1) & BUF_RECV_MASK;
+	}
+	
+	return 0;
+}
+static inline unsigned int flexcan_send_buf_pop(u8 dev_num, struct can_frame *s_frame)
+{
+	circle_buf_t *f_buf = &fimx6d.f_dev[dev_num].frame_buf_send;
+
+	unsigned int buf_ret = flexcan_send_buf_is_empty(dev_num);
+	if(buf_ret)	{
+		return 1;
+	}
+	else 	{
+		*(struct can_frame *) s_frame = *(struct can_frame *) (fimx6d.f_dev[dev_num].buf_send + f_buf->n_last);
+		f_buf->n_last = (f_buf->n_last + 1) & BUF_SEND_MASK;
+	}
+
 	return 0;
 }
 
-static inline unsigned int flexcan_buf_free_space(u8 *dev_num)
+static inline unsigned int flexcan_recv_buf_free_space(u8 dev_num)
 {
-	circle_buf_t *f_buf = &fimx6d.f_dev[(*dev_num)].frame_buf;
-
-	unsigned int buf_free_space = (f_buf->n_last - f_buf->n_first - 1) & BUF_MASK;
+	circle_buf_t *f_buf = &fimx6d.f_dev[dev_num].frame_buf_recv;
+	unsigned int buf_free_space = (f_buf->n_last - f_buf->n_first - 1) & BUF_RECV_MASK;
+	return buf_free_space;
+}
+static inline unsigned int flexcan_send_buf_free_space(u8 dev_num)
+{
+	circle_buf_t *f_buf = &fimx6d.f_dev[dev_num].frame_buf_send;
+	unsigned int buf_free_space = (f_buf->n_last - f_buf->n_first - 1) & BUF_SEND_MASK;
 	return buf_free_space;
 }
 
-static inline unsigned int flexcan_buf_data_size(u8 *dev_num)
+static inline unsigned int flexcan_recv_buf_data_size(u8 dev_num)
 {
-	circle_buf_t *f_buf = &fimx6d.f_dev[(*dev_num)].frame_buf;
-
-	unsigned int buf_data_size = (f_buf->n_first - f_buf->n_last) & BUF_MASK;
+	circle_buf_t *f_buf = &fimx6d.f_dev[dev_num].frame_buf_recv;
+	unsigned int buf_data_size = (f_buf->n_first - f_buf->n_last) & BUF_RECV_MASK;
 	return buf_data_size;
 }
-
-static ssize_t flexcan_chr_write(struct file *file, const char __user *buf, size_t length, loff_t *off)
+static inline unsigned int flexcan_send_buf_data_size(u8 dev_num)
 {
-	// static int i = 0;
-
-	// for(i = 0; i < length && i < BUF_LENGTH; i++)	{
-	// 	get_user(Message[i], buf + i);
-	// }
-	// Message_Ptr = Message;
-    // return i;
-    return 0;		//временно
+	circle_buf_t *f_buf = &fimx6d.f_dev[dev_num].frame_buf_send;
+	unsigned int buf_data_size = (f_buf->n_first - f_buf->n_last) & BUF_SEND_MASK;
+	return buf_data_size;
 }
+// ######################################################################################################################
+// ######################################################################################################################
 
-static ssize_t flexcan_chr_read(struct file *file, char __user *buf, size_t length_read, loff_t *off)
+
+
+// ######################################################################################################################
+// ##############################	Чисто временная мера, потом вернуть код на место!!!	  ###############################
+// ######################################################################################################################
+// #include "code_char.c"
+static ssize_t flexcan_char_write(struct file *file, const char __user *buf, size_t length, loff_t *off)
 {
 	struct inode *inode = file->f_path.dentry->d_inode;
 	u8 dev_num = iminor(inode);
-	struct flexcan_frame frame;
-	struct flexcan_frame *user_buf_ptr = (struct flexcan_frame *) buf;
 
-	unsigned int frame_need_send = 0;
-	size_t length = length_read;
-	unsigned int i = 0, cp_ret = 0;
+	struct flexcan_frame_cf frame;
+	struct flexcan_frame_cf *user_buf_ptr = (struct flexcan_frame_cf *) buf;
 
-	/* Проверяем размер буффера пользователя */
-	if(length < sizeof(struct flexcan_frame))	{
-		my_debug("%s.%d: %s return 0\n", fimx6d.name, dev_num, __func__);
+	unsigned int i = 0, cp_ret = 0, buf_ret = 0;
+	unsigned int frame_need_read = 0;
+
+	// 1my_debug("%s.%d: %s start work\n", fimx6d.name, dev_num, __func__);
+
+	/* Проверяем размер сообщения */
+	if(length < sizeof(struct flexcan_frame_cf))	{
+		// 1my_debug("%s.%d: %s return 0\n", fimx6d.name, dev_num, __func__);
 		return 0;
 	}
-	frame_need_send = (((int) length) / sizeof(struct flexcan_frame));
+	frame_need_read = (((int) length) / sizeof(struct flexcan_frame_cf));
+
+	// 1my_debug("%s.%d: %s need read %d frames from user\n", fimx6d.name, dev_num, __func__, frame_need_read);
+	/* Проверяем полный ли буффер */
+	buf_ret = flexcan_send_buf_is_full(dev_num);
+	if(buf_ret)	{
+		// 1my_debug("%s.%d: %s bufer is full, return 0\n", fimx6d.name, dev_num, __func__);
+		return 0;
+	}
+
+	/* Получение данных */
+	// 1my_debug("%s.%d: %s start read %d frames\n", fimx6d.name, dev_num, __func__, frame_need_read);
+
+	for(i = 0; i < frame_need_read; i++)	{
+		cp_ret = copy_from_user(&frame, user_buf_ptr++, sizeof(struct flexcan_frame_cf));
+		if(cp_ret)	{
+			// 1my_debug("%s.%d: %s copy_from_user can't copy = %d bytes\n", fimx6d.name, (int) dev_num, __func__, cp_ret);
+		}
+		else 	{
+			buf_ret = flexcan_send_buf_push(dev_num, &frame.cf);
+			if (buf_ret) {
+				break;
+			}
+		}
+	}
+	flexcan_start_transmit(dev_num);
+
+    return (i * sizeof(struct flexcan_frame_cf));
+}
+
+
+static void flexcan_decode_frame(struct can_frame *cf, const struct flexcan_mb *mb)
+{
+	if (mb->can_ctrl & FLEXCAN_MB_CNT_IDE)	{
+		cf->can_id = ((mb->can_id >> 0) & CAN_EFF_MASK) | CAN_EFF_FLAG;
+	}
+	else 	{
+		cf->can_id = (mb->can_id >> 18) & CAN_SFF_MASK;
+	}
+
+	if (mb->can_ctrl & FLEXCAN_MB_CNT_RTR)	{
+		cf->can_id |= CAN_RTR_FLAG;
+	}
+	cf->can_dlc = ((mb->can_ctrl >> 16) & 0xf);
+
+	if(cf->can_dlc == 0)	{
+		*(__be32 *)(cf->data + 0) = 0x00000000;
+		*(__be32 *)(cf->data + 4) = 0x00000000;
+	}
+	else if(cf->can_dlc <= 4)	{
+		*(__be32 *)(cf->data + 0) = cpu_to_be32(readl(&mb->data[0]));
+		*(__be32 *)(cf->data + 4) = 0x00000000;		
+	}
+	else 	{
+		*(__be32 *)(cf->data + 0) = cpu_to_be32(readl(&mb->data[0]));
+		*(__be32 *)(cf->data + 4) = cpu_to_be32(readl(&mb->data[1]));
+	}
+}
+
+
+static ssize_t flexcan_char_read(struct file *file, char __user *buf, size_t length_read, loff_t *off)
+{
+	struct inode *inode = file->f_path.dentry->d_inode;
+	u8 dev_num = iminor(inode);
+
+	struct flexcan_frame_mb read_frame;
+	struct flexcan_frame_cf send_frame;
+	struct flexcan_frame_cf *user_buf_ptr = (struct flexcan_frame_cf *) buf;
+
+	size_t length = length_read;
+	unsigned int i = 0, cp_ret = 0, buf_ret = 0;
+	unsigned int frame_need_send = 0;
+
+	/* Проверяем размер буффера пользователя */
+	if(length < sizeof(struct flexcan_frame_cf))	{
+		// 1my_debug("%s.%d: %s return 0\n", fimx6d.name, dev_num, __func__);
+		return 0;
+	}
+	frame_need_send = (((int) length) / sizeof(struct flexcan_frame_cf));
+
 	/* Проверяем пустой ли буффер */
-	if(flexcan_buf_is_empty(&dev_num))	{
-		// my_debug("%s.%d: %s return 0\n", fimx6d.name, dev_num, __func__);
+	buf_ret = flexcan_recv_buf_is_empty(dev_num);
+	if(buf_ret)	{
 		return 0;
 	}
 
 	/* Отправка данных */
-	my_debug("%s.%d: %s start send %d frames\n", fimx6d.name, dev_num, __func__, frame_need_send);
+	// 1my_debug("%s.%d: %s start send %d frames\n", fimx6d.name, dev_num, __func__, frame_need_send);
 	for(i = 0; i < frame_need_send; i++)	{
-		if (flexcan_buf_pop(&dev_num, &frame)) {
+		buf_ret = flexcan_recv_buf_pop(dev_num, &read_frame);
+		if (buf_ret) {
 			break;
 		}
-		my_debug("%s.%d: %s copy_to_user %#08x.%#08x %#08x %#08x [%#08x,%#08x]\n", fimx6d.name, dev_num, __func__, frame.time.tv_sec, frame.time.tv_usec, frame.mb.can_ctrl, frame.mb.can_id, frame.mb.data[0], frame.mb.data[1]);
-		cp_ret = copy_to_user(user_buf_ptr++, &frame, sizeof(struct flexcan_frame));	
-		if(cp_ret)	{
-			my_debug("%s.%d: %s copy_to_user can't copy = %d bytes\n", fimx6d.name, (int) dev_num, __func__, cp_ret);
+		else 	{
+			memcpy(&send_frame.time, &read_frame.time, sizeof(struct timeval));
+			flexcan_decode_frame(&send_frame.cf, &read_frame.mb);
+
+			// 1my_debug("%s.%d: %s copy_to_user %#08x.%#08x %#08x %#02x [0x%02x%02x%02x%02x,0x%02x%02x%02x%02x]\n", fimx6d.name, dev_num, __func__, send_frame.time.tv_sec, send_frame.time.tv_usec, send_frame.cf.can_id, send_frame.cf.can_dlc, send_frame.cf.data[0], send_frame.cf.data[1], send_frame.cf.data[2], send_frame.cf.data[3], send_frame.cf.data[4], send_frame.cf.data[5], send_frame.cf.data[6], send_frame.cf.data[7]);
+			cp_ret = copy_to_user(user_buf_ptr++, &send_frame, sizeof(struct flexcan_frame_cf));	
+			if(cp_ret)	{
+				// 1my_debug("%s.%d: %s copy_to_user can't copy = %d bytes\n", fimx6d.name, (int) dev_num, __func__, cp_ret);
+				break;
+			}
+			else 	{
+				// 1my_debug("%s.%d: %s user_buf_ptr = %#08x\n", fimx6d.name, (int) dev_num, __func__, (int) user_buf_ptr);
+			}
 		}
-		my_debug("%s.%d: %s user_buf_ptr = %#08x\n", fimx6d.name, (int) dev_num, __func__, (int) user_buf_ptr);
 	}
 
-	// my_debug("%s.%d: %s end send func, return %d\n", fimx6d.name, (int) dev_num, __func__, i);
-	return (i * sizeof(struct flexcan_frame));
+	return (i * sizeof(struct flexcan_frame_cf));
 }
 
 //IOCTL Func ------------------------------------------------------------------------------------------------------------------------------------
-static int flexcan_chr_ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param)
+static int flexcan_char_ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param)
 {	
 	struct inode *inode = file->f_path.dentry->d_inode;
-	u8 dev_num = iminor(inode);
-	static u32 settings = 0;
+	const u8 dev_num = iminor(inode);
+	static u32 read_settings = 0;
+	u32 settings_debug = 0, settings_mode = 0, settings_bitrate = 0;
+	int err = 0;
 
-	my_debug("%s.%d: %s IOCTL request\n", fimx6d.name, dev_num, __func__);
+	// 1my_debug("%s.%d: %s IOCTL request\n", fimx6d.name, dev_num, __func__);
 
 	switch (ioctl_num) {
 		case FLEXCAN_IOCTL_READ:
-			put_user(settings, (int *) ioctl_param);
+			put_user(read_settings, (int *) ioctl_param);
 			break;
 		case FLEXCAN_IOCTL_WRITE:
-			get_user(settings, (int *) ioctl_param);
-			if(settings & DRIVER_DEBUG_ON)	{
-				my_debug = printk;
+			get_user(read_settings, (int *) ioctl_param);
+
+			settings_debug = read_settings & SET_DRIVER_DEBUG_MASK;
+			settings_mode = read_settings & SET_CAN_MODE_MASK;
+			settings_bitrate = read_settings & SET_CAN_BITRATE_MASK;
+
+			if(settings_debug)	{
+				if(settings_debug & SET_DRIVER_DEBUG_ON)	{
+					// 1my_debug = printk;
+				}
+				else if(settings_debug & SET_DRIVER_DEBUG_OFF)	{
+					// 1my_debug = pp;
+				}
 			}
-			else if(settings & DRIVER_DEBUG_OFF)	{
-				my_debug = pp;
+			if(settings_bitrate || settings_mode)	{
+				switch (settings_bitrate) 	{
+					case SET_CAN_BITRATE_1000:
+						fimx6d.f_dev[dev_num].reg_ctrl_bittiming = FLEXCAN_BTRT_1000;
+						break;
+					case SET_CAN_BITRATE_500:
+						fimx6d.f_dev[dev_num].reg_ctrl_bittiming = FLEXCAN_BTRT_500;
+						break;
+					case SET_CAN_BITRATE_250:
+						fimx6d.f_dev[dev_num].reg_ctrl_bittiming = FLEXCAN_BTRT_250;
+						break;
+					case SET_CAN_BITRATE_125:
+						fimx6d.f_dev[dev_num].reg_ctrl_bittiming = FLEXCAN_BTRT_125;
+						break;
+					case SET_CAN_BITRATE_100:
+						fimx6d.f_dev[dev_num].reg_ctrl_bittiming = FLEXCAN_BTRT_100;
+						break;
+				}
+				if (settings_mode & SET_CAN_MODE_LOOPBACK)	{
+					fimx6d.f_dev[dev_num].reg_ctrl_bittiming |= FLEXCAN_CTRL_LPB;
+				}
+				if (settings_mode & SET_CAN_MODE_LISTENONLY)	{
+					fimx6d.f_dev[dev_num].reg_ctrl_bittiming |= FLEXCAN_CTRL_LOM;
+				}
+				if (settings_mode & SET_CAN_MODE_3_SAMPLES)	{
+					fimx6d.f_dev[dev_num].reg_ctrl_bittiming |= FLEXCAN_CTRL_SMP;
+				}
+				flexcan_chip_stop(dev_num);
+				err = flexcan_chip_start(dev_num);
+				if(err)	{
+					// 1my_debug("%s.%d: %s error when try to start the module\n", fimx6d.name, dev_num, __func__);
+				}
 			}
 			// тут вызвать функцию которая задаст новые настройки для конкретного can интерфейса
 			// возможно нужно самому написать эту функцию, переписав flexcan_set_bittiming() или не нужно, еще не проверял.
 			break;
 		case FLEXCAN_IOCTL_WR_RD:
+			// copy_from_user(&cf, (int *) ioctl_param, sizeof(struct can_frame));	
+			// // 1my_debug("%s.%d: %s copy from user: DLC 0x%02x, ID %#08x, DATA = 0x%02x%02x%02x%02x 0x%02x%02x%02x%02x\n", 
+			// 			fimx6d.name, dev_num, __func__, cf.can_dlc, cf.can_id, 
+			// 			cf.data[0], cf.data[1], cf.data[2], cf.data[3], cf.data[4], cf.data[5], cf.data[6], cf.data[7]);
+			// flexcan_transmit_frame(&cf, &dev_num);
 			return -EINVAL;					// Пока не придумаю зачем надо будет не поддерживаемая инструкция
 			break;
 		default:
@@ -426,6 +693,15 @@ static int flexcan_chr_ioctl(struct file *file, unsigned int ioctl_num, unsigned
 			break;
 	}
 	return 0;
+
+/*
+	unsigned int buf_ret = 0;
+	buf_ret = flexcan_send_buf_is_empty(dev_num);
+	if(buf_ret)	{
+		flexcan_start_transmit(dev_num);
+	}
+
+*/
 
 /*
 	int i = 0, err = 0;
@@ -498,23 +774,23 @@ static int flexcan_chr_ioctl(struct file *file, unsigned int ioctl_num, unsigned
 */
 }
 
-static int flexcan_chr_release(struct inode *i, struct file *file)
+static int flexcan_char_release(struct inode *i, struct file *file)
 {
 	u8 dev_num = iminor(i);
 	fimx6d.f_dev[dev_num].is_open = 0;
-	my_debug("%s.%d: %s \n", fimx6d.name, dev_num, __func__);
+	// 1my_debug("%s.%d: %s \n", fimx6d.name, dev_num, __func__);
 	module_put(THIS_MODULE);
     return 0;
 }
 
-static int flexcan_chr_open(struct inode *i, struct file *file)
+static int flexcan_char_open(struct inode *i, struct file *file)
 {
 	u8 dev_num = iminor(i);
 	if(fimx6d.f_dev[dev_num].is_open)	{
 		return -EBUSY;
-		my_debug("%s.%d: %s file was opened early\n", fimx6d.name, dev_num, __func__);
+		// 1my_debug("%s.%d: %s file was opened early\n", fimx6d.name, dev_num, __func__);
 	}
-	my_debug("%s.%d: %s file open success\n", fimx6d.name, dev_num, __func__);
+	// 1my_debug("%s.%d: %s file open success\n", fimx6d.name, dev_num, __func__);
 
 	fimx6d.f_dev[dev_num].is_open = 1;
 	try_module_get(THIS_MODULE);
@@ -524,17 +800,18 @@ static int flexcan_chr_open(struct inode *i, struct file *file)
 static struct file_operations flexcan_fops =
 {
     .owner = 	THIS_MODULE,
-    .open = 	flexcan_chr_open,
-    .release = 	flexcan_chr_release,
-    .read = 	flexcan_chr_read,
-    .write = 	flexcan_chr_write,
+    .open = 	flexcan_char_open,
+    .release = 	flexcan_char_release,
+    .read = 	flexcan_char_read,
+    .write = 	flexcan_char_write,
 	#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35))
-    	.ioctl = flexcan_chr_ioctl,
+    	.ioctl = flexcan_char_ioctl,
 	#else
-    	.unlocked_ioctl = flexcan_chr_ioctl,
+    	.unlocked_ioctl = flexcan_char_ioctl,
 	#endif
 };
-
+// ######################################################################################################################
+// ######################################################################################################################
 
 static inline void flexcan_f_dev_init(struct flexcan_chardev *f_dev)
 {
@@ -543,34 +820,400 @@ static inline void flexcan_f_dev_init(struct flexcan_chardev *f_dev)
 	f_dev->stats.rx_bytes = 0;
 	f_dev->stats.tx_bytes = 0;	
 
-	f_dev->stats.state_req = 0;
-	f_dev->stats.frame_req = 0;
-	f_dev->stats.irq_num = 0;
+	f_dev->stats.int_wak = 0;
+	f_dev->stats.int_state = 0;
+	f_dev->stats.int_rx_frame = 0;
+	f_dev->stats.int_tx_frame = 0;
+	f_dev->stats.int_num = 0;
 
+	f_dev->stats.err_tx = 0;
+	f_dev->stats.err_rx = 0;
 	f_dev->stats.err_over = 0;
 	f_dev->stats.err_warn = 0;
 	f_dev->stats.err_frame = 0;	
 	f_dev->stats.err_drop = 0;
 	f_dev->stats.err_length = 0;
+	f_dev->stats.err_fifo = 0;
 
+	f_dev->stats.reg_esr = 0;	
 	f_dev->stats.reg_mcr = 0;	
 	f_dev->stats.reg_ctrl = 0;
 
-	f_dev->frame_buf.n_first = 0;
-	f_dev->frame_buf.n_last = 0;
-	f_dev->frame_buf_size = FLEX_BUF_CAP;
+	f_dev->buf_recv_size = BUF_RECV_CAP;
+	f_dev->frame_buf_recv.n_first = 0;
+	f_dev->frame_buf_recv.n_last = 0;
+
+	f_dev->buf_send_size = BUF_SEND_CAP;
+	f_dev->frame_buf_send.n_first = 0;
+	f_dev->frame_buf_send.n_last = 0;
+
+	f_dev->reg_ctrl_bittiming = FLEXCAN_BTRT_DFLT;
 }
 
+// ######################################################################################################################
+// ##############################	Чисто временная мера, потом вернуть код на место!!!	  ###############################
+// ######################################################################################################################
+// #include "code_proc.c"
+#define NAME_DIR 		"flexcan"
+#define LEN_MSG 3072
 
-static int flexcan_proc_read(char *buffer, char **buffer_location, off_t offset, int buffer_length, int zero)
+
+static char *get_rw_buf(const u8 dev_num, int *length) 
 {
-  int len;  /* The number of bytes actually used */
+	struct flexcan_stats *stats = &fimx6d.f_dev[dev_num].stats;
+	static char buf_msg[LEN_MSG + 1];
+	char *buf_ptr = buf_msg;
+	int buf_length = 0;
+	const int max_digits = 10;
 
-  return len;
+	memset(buf_msg, 0, sizeof(buf_msg));
+
+	char new_line[] = "\n";
+	char info_head_rxtx[] = "Data communication statistic:\n";
+	memcpy(buf_ptr, &info_head_rxtx, sizeof(info_head_rxtx));
+	buf_ptr += sizeof(info_head_rxtx);
+	buf_length += sizeof(info_head_rxtx);
+	char info_rx_frames[] = "\tReceived frames    = ";		// количество принятых фреймов
+	memcpy(buf_ptr, &info_rx_frames, sizeof(info_rx_frames));
+	buf_ptr += sizeof(info_rx_frames);
+	buf_length += sizeof(info_rx_frames);
+	sprintf(buf_ptr, "%d", (int) stats->rx_frames);
+	buf_ptr += max_digits;	
+	buf_length += max_digits;
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_tx_frames[] = "\tTransmited frames  = ";		// количество отправленных фреймов
+	memcpy(buf_ptr, &info_tx_frames, sizeof(info_tx_frames));
+	buf_ptr += sizeof(info_tx_frames);
+	buf_length += sizeof(info_tx_frames);
+	sprintf(buf_ptr, "%d", (int) stats->tx_frames);
+	buf_ptr += max_digits;	
+	buf_length += max_digits;	
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_rx_bytes[] = "\tReceived bytes   = ";			// количество принятых байт данных
+	memcpy(buf_ptr, &info_rx_bytes, sizeof(info_rx_bytes));
+	buf_ptr += sizeof(info_rx_bytes);
+	buf_length += sizeof(info_rx_bytes);
+	sprintf(buf_ptr, "%d", (int) stats->rx_bytes);
+	buf_ptr += max_digits;
+	buf_length += max_digits;		
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_tx_bytes[] = "\tTransmited bytes = ";		// количество отправленных байт данных
+	memcpy(buf_ptr, &info_tx_bytes, sizeof(info_tx_bytes));
+	buf_ptr += sizeof(info_tx_bytes);
+	buf_length += sizeof(info_tx_bytes);
+	sprintf(buf_ptr, "%d", stats->tx_bytes);
+	buf_ptr += max_digits;
+	buf_length += max_digits;	
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_head_int[] = "Interrupts statistic:\n";
+	memcpy(buf_ptr, &info_head_int, sizeof(info_head_int));
+	buf_ptr += sizeof(info_head_int);
+	buf_length += sizeof(info_head_int);	
+	char info_int_wak[] = "\tWakeUp interrupts         = ";				// количество прерываний пробуждения
+	memcpy(buf_ptr, &info_int_wak, sizeof(info_int_wak));
+	buf_ptr += sizeof(info_int_wak);
+	buf_length += sizeof(info_int_wak);
+	sprintf(buf_ptr, "%d", stats->int_wak);
+	buf_ptr += max_digits;	
+	buf_length += max_digits;	
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_int_state[] = "\tState change interrupts   = ";		// количество прерываний проверки состояния
+	memcpy(buf_ptr, &info_int_state, sizeof(info_int_state));
+	buf_ptr += sizeof(info_int_state);
+	buf_length += sizeof(info_int_state);
+	sprintf(buf_ptr, "%d", stats->int_state);
+	buf_ptr += max_digits;	
+	buf_length += max_digits;	
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_int_rx_frame[] = "\tRead frame interrupts     = ";		// количество прерываний чтения фреймов
+	memcpy(buf_ptr, &info_int_rx_frame, sizeof(info_int_rx_frame));
+	buf_ptr += sizeof(info_int_rx_frame);
+	buf_length += sizeof(info_int_rx_frame);
+	sprintf(buf_ptr, "%d", stats->int_rx_frame);
+	buf_ptr += max_digits;	
+	buf_length += max_digits;	
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_int_tx_frame[] = "\tTransmit frame interrupts = ";	// количество прерываний отправки фреймов
+	memcpy(buf_ptr, &info_int_tx_frame, sizeof(info_int_tx_frame));
+	buf_ptr += sizeof(info_int_tx_frame);
+	buf_length += sizeof(info_int_tx_frame);
+	sprintf(buf_ptr, "%d", stats->int_tx_frame);
+	buf_ptr += max_digits;	
+	buf_length += max_digits;		
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_int_num[] = "\tTotal interrupts count    = ";					// количество прерываний
+	memcpy(buf_ptr, &info_int_num, sizeof(info_int_num));
+	buf_ptr += sizeof(info_int_num);
+	buf_length += sizeof(info_int_num);
+	sprintf(buf_ptr, "%d", stats->int_num);
+	buf_ptr += max_digits;	
+	buf_length += max_digits;	
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_head_err[] = "Errors statistic:\n";
+	memcpy(buf_ptr, &info_head_err, sizeof(info_head_err));
+	buf_ptr += sizeof(info_head_err);
+	buf_length += sizeof(info_head_err);
+	char info_err_tx[] = "\tTransmit errors = ";			// количество ошибок отправки фреймов
+	memcpy(buf_ptr, &info_err_tx, sizeof(info_err_tx));
+	buf_ptr += sizeof(info_err_tx);
+	buf_length += sizeof(info_err_tx);
+	sprintf(buf_ptr, "%d", stats->err_tx);
+	buf_ptr += max_digits;	
+	buf_length += max_digits;
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_err_rx[] = "\tReceive errors  = ";			// количество ошибок принятия фреймов
+	memcpy(buf_ptr, &info_err_rx, sizeof(info_err_rx));
+	buf_ptr += sizeof(info_err_rx);
+	buf_length += sizeof(info_err_rx);
+	sprintf(buf_ptr, "%d", stats->err_rx);
+	buf_ptr += max_digits;	
+	buf_length += max_digits;
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_err_over[] = "\tOverflow errors = ";		// количество переполнений буффера
+	memcpy(buf_ptr, &info_err_over, sizeof(info_err_over));
+	buf_ptr += sizeof(info_err_over);
+	buf_length += sizeof(info_err_over);
+	sprintf(buf_ptr, "%d", stats->err_over);
+	buf_ptr += max_digits;	
+	buf_length += max_digits;
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_err_warn[] = "\tWarning errors  = ";			// количество заполнений буффера
+	memcpy(buf_ptr, &info_err_warn, sizeof(info_err_warn));
+	buf_ptr += sizeof(info_err_warn);
+	buf_length += sizeof(info_err_warn);
+	sprintf(buf_ptr, "%d", stats->err_warn);
+	buf_ptr += max_digits;	
+	buf_length += max_digits;
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_err_frame[] = "\tFrame errors    = ";			// количество ошибочных фреймов
+	memcpy(buf_ptr, &info_err_frame, sizeof(info_err_frame));
+	buf_ptr += sizeof(info_err_frame);
+	buf_length += sizeof(info_err_frame);
+	sprintf(buf_ptr, "%d", stats->err_frame);
+	buf_ptr += max_digits;	
+	buf_length += max_digits;
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_err_drop[] = "\tDroped errors   = ";			// количество потерянных при чтении фреймов
+	memcpy(buf_ptr, &info_err_drop, sizeof(info_err_drop));
+	buf_ptr += sizeof(info_err_drop);
+	buf_length += sizeof(info_err_drop);
+	sprintf(buf_ptr, "%d", stats->err_drop);
+	buf_ptr += max_digits;	
+	buf_length += max_digits;
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_err_length[] = "\tLength errors   = ";		// количество ошибок длины фреймов
+	memcpy(buf_ptr, &info_err_length, sizeof(info_err_length));
+	buf_ptr += sizeof(info_err_length);
+	buf_length += sizeof(info_err_length);
+	sprintf(buf_ptr, "%d", stats->err_length);
+	buf_ptr += max_digits;	
+	buf_length += max_digits;
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_err_fifo[] = "\tFIFO errors     = ";			// количество ошибок fifo буффера
+	memcpy(buf_ptr, &info_err_fifo, sizeof(info_err_fifo));
+	buf_ptr += sizeof(info_err_fifo);
+	buf_length += sizeof(info_err_fifo);
+	sprintf(buf_ptr, "%d", stats->err_fifo);
+	buf_ptr += max_digits;	
+	buf_length += max_digits;
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_head_reg[] = "Registers state:\n";
+	memcpy(buf_ptr, &info_head_reg, sizeof(info_head_reg));
+	buf_ptr += sizeof(info_head_reg);
+	buf_length += sizeof(info_head_reg);
+	char info_reg_esr[] = "\tESR register  = ";			// состояние регистра esr
+	memcpy(buf_ptr, &info_reg_esr, sizeof(info_reg_esr));
+	buf_ptr += sizeof(info_reg_esr);
+	buf_length += sizeof(info_reg_esr);
+	sprintf(buf_ptr, "0x%08x", stats->reg_esr);	
+	buf_ptr += max_digits;	
+	buf_length += max_digits;
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_reg_mcr[] = "\tMCR register  = ";			// состояние регистра mcr
+	memcpy(buf_ptr, &info_reg_mcr, sizeof(info_reg_mcr));
+	buf_ptr += sizeof(info_reg_mcr);
+	buf_length += sizeof(info_reg_mcr);
+	sprintf(buf_ptr, "0x%08x", stats->reg_mcr);	
+	buf_ptr += max_digits;	
+	buf_length += max_digits;
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_reg_ctrl[] = "\tCTRL register = ";			// состояние регистра ctrl
+	memcpy(buf_ptr, &info_reg_ctrl, sizeof(info_reg_ctrl));
+	buf_ptr += sizeof(info_reg_ctrl);
+	buf_length += sizeof(info_reg_ctrl);
+	sprintf(buf_ptr, "0x%08x", stats->reg_ctrl);
+	buf_ptr += max_digits;	
+	buf_length += max_digits;
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+	char info_head_freq[] = "Module frequency:\n";
+	memcpy(buf_ptr, &info_head_freq, sizeof(info_head_freq));
+	buf_ptr += sizeof(info_head_freq);
+	buf_length += sizeof(info_head_freq);
+	char info_freq[] = "\tFreq = ";						// частота модуля
+	memcpy(buf_ptr, &info_freq, sizeof(info_freq));
+	buf_ptr += sizeof(info_freq);
+	buf_length += sizeof(info_freq);
+	sprintf(buf_ptr, "%d", stats->freq);
+	buf_ptr += max_digits;	
+	buf_length += max_digits;
+	memcpy(buf_ptr, &new_line, sizeof(new_line));
+	buf_ptr += sizeof(new_line);
+	buf_length += sizeof(new_line);
+
+	*length = buf_length;
+
+	return buf_msg;
 }
 
-struct proc_dir_entry flexcan_proc_file = {
-  };
+// чтение из /proc/*my_dir*/*my_node* :
+static ssize_t flexcan_proc_read(struct file *file, char *buf, size_t count, loff_t *ppos) 
+{
+	struct inode *inode = file->f_path.dentry->d_inode;
+	u8 dev_num = iminor(inode);
+	int buf_length = 0;
+	char *buf_msg = get_rw_buf(dev_num, &buf_length);
+	int res;
+	// 1my_debug("%s.%d: %s count = %d, buf_length = %d, *ppos = %d\n", fimx6d.name, dev_num, __func__, count, buf_length, (int) *ppos);
+
+	if(*ppos >= buf_length) 	{
+		// 1my_debug("%s.%d: %s End of File\n", fimx6d.name, dev_num, __func__);
+		return 0;
+	}
+
+	res = copy_to_user((void*)buf, buf_msg + *ppos, buf_length);
+	*ppos += buf_length;
+	// // res = copy_to_user((void*)buf, buf_msg + *ppos, count);
+	// // res = copy_to_user((void*)buf, buf_msg + *ppos, 3072);
+	// *ppos += strlen(buf_msg);
+	// buf_msg += strlen(buf_msg);
+	// buf_length -= strlen(buf_msg);		
+	// // 1my_debug("%s.%d: %s return %d bytes\n", fimx6d.name, dev_num, __func__, count);
+
+	// return count;
+	return buf_length;
+}
+
+static const struct file_operations flexcan_proc_fops = {
+   .owner = THIS_MODULE,
+   .read  = flexcan_proc_read,
+};
+
+static int flexcan_proc_dir_init(void) 
+{
+	int ret;
+
+	fimx6d.dev_proc_dir = create_proc_entry(NAME_DIR, S_IFDIR | S_IRWXUGO, NULL);
+	if(NULL == fimx6d.dev_proc_dir) {
+		ret = -ENOENT;
+		// 1my_debug("%s: %s can't create directory /proc/%s\n", fimx6d.name, __func__, NAME_DIR);
+		goto err_dir;
+	}
+
+	fimx6d.dev_proc_dir->uid = 0;
+	fimx6d.dev_proc_dir->gid = 0;
+
+	// 1my_debug("%s: %s /proc/%s installed\n", fimx6d.name, __func__, NAME_DIR);
+
+	return 0;
+
+ err_dir:
+	return ret;
+}
+
+static int flexcan_proc_file_init(u8 dev_num) 
+{
+	int ret;
+
+	fimx6d.f_dev[dev_num].dev_proc_file = create_proc_entry(fimx6d.f_dev[dev_num].name, S_IFREG | S_IRUGO, fimx6d.dev_proc_dir);
+	if(NULL == fimx6d.f_dev[dev_num].dev_proc_file) {
+		ret = -ENOENT;
+		// 1my_debug("%s.%d: %s can't create node /proc/%s/%s\n", fimx6d.name, dev_num, __func__, NAME_DIR, fimx6d.f_dev[dev_num].name);
+		goto err_file;
+	}
+
+	fimx6d.f_dev[dev_num].dev_proc_file->uid = 0;
+	fimx6d.f_dev[dev_num].dev_proc_file->gid = 0;
+	fimx6d.f_dev[dev_num].dev_proc_file->proc_fops = &flexcan_proc_fops;
+
+	// 1my_debug("%s.%d: %s /proc/%s/%s installed\n", fimx6d.name, dev_num, __func__, NAME_DIR, fimx6d.f_dev[dev_num].name);
+
+	return 0;
+
+ err_file:
+	return ret;
+}
+
+static void flexcan_proc_file_exit(u8 dev_num) 
+{
+	remove_proc_entry(fimx6d.f_dev[dev_num].name, fimx6d.dev_proc_dir);
+	// 1my_debug("%s.%d: %s /proc/%s/%s removed\n", fimx6d.name, dev_num, __func__, NAME_DIR, fimx6d.f_dev[dev_num].name);
+}
+
+static void flexcan_proc_dir_exit(void) 
+{
+	remove_proc_entry(NAME_DIR, NULL);
+	// 1my_debug("%s: %s /proc/%s removed\n", fimx6d.name, __func__, NAME_DIR);
+}
+
+// ######################################################################################################################
+// ######################################################################################################################
+
 
 static void flexcan_transceiver_switch(const struct flexcan_platform_data *pdata, int on)
 {
@@ -586,14 +1229,14 @@ static void flexcan_gpio_switch(const struct flexcan_platform_data *pdata, int o
 	}
 }
 
-static inline int flexcan_has_and_handle_berr(const struct flexcan_priv *priv, u32 reg_esr)
+static inline int flexcan_has_and_handle_berr(const struct flexcan_stats *stats, u32 reg_esr)
 {
-	return (priv->can.ctrlmode & CAN_CTRLMODE_BERR_REPORTING) && (reg_esr & FLEXCAN_ESR_ERR_BUS);
+	return (stats->ctrlmode & CAN_CTRLMODE_BERR_REPORTING) && (reg_esr & FLEXCAN_ESR_ERR_BUS);
 }
 
-static inline void flexcan_chip_enable(struct flexcan_priv *priv)
+static inline void flexcan_chip_enable(void __iomem *base)
 {
-	struct flexcan_regs __iomem *regs = priv->base;
+	struct flexcan_regs __iomem *regs = base;
 	u32 reg;
 
 	reg = readl(&regs->mcr);
@@ -603,9 +1246,9 @@ static inline void flexcan_chip_enable(struct flexcan_priv *priv)
 	udelay(10);
 }
 
-static inline void flexcan_chip_disable(struct flexcan_priv *priv)
+static inline void flexcan_chip_disable(void __iomem *base)
 {
-	struct flexcan_regs __iomem *regs = priv->base;
+	struct flexcan_regs __iomem *regs = base;
 	u32 reg;
 
 	reg = readl(&regs->mcr);
@@ -613,10 +1256,9 @@ static inline void flexcan_chip_disable(struct flexcan_priv *priv)
 	writel(reg, &regs->mcr);
 }
 
-static int flexcan_get_berr_counter(const struct net_device *dev, struct can_berr_counter *bec)
+static int flexcan_get_berr_counter(u8 dev_num, struct can_berr_counter *bec)
 {
-	const struct flexcan_priv *priv = netdev_priv(dev);
-	struct flexcan_regs __iomem *regs = priv->base;
+	struct flexcan_regs __iomem *regs = fimx6d.f_dev[dev_num].f_base;
 	u32 reg = readl(&regs->ecr);
 
 	bec->txerr = (reg >> 0) & 0xff;
@@ -625,161 +1267,120 @@ static int flexcan_get_berr_counter(const struct net_device *dev, struct can_ber
 	return 0;
 }
 
-static int flexcan_net_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static unsigned int flexcan_start_transmit(u8 dev_num)
 {
-	const struct flexcan_priv *priv = netdev_priv(dev);
-	struct net_device_stats *stats = &dev->stats;
-	struct flexcan_regs __iomem *regs = priv->base;
-	struct can_frame *cf = (struct can_frame *)skb->data;
-	u32 can_id;
-	u32 ctrl = FLEXCAN_MB_CNT_CODE(0xc) | (cf->can_dlc << 16);
+	struct can_frame cf;
+	struct flexcan_regs __iomem *regs = fimx6d.f_dev[dev_num].f_base;
+	struct flexcan_stats *stats = &fimx6d.f_dev[dev_num].stats;
+	u32 can_id, ctrl;
+	unsigned int buf_ret = 0;
 
-	if (can_dropped_invalid_skb(dev, skb))	{
-		return NETDEV_TX_OK;
+	buf_ret = flexcan_send_buf_is_empty(dev_num);
+	if(buf_ret)	{
+		return 0;
 	}
 
-	netif_stop_queue(dev);
+	/* На будущее проверка статуса буфера в данный момент */
+	// u8 mb_code = ((readl(&regs->cantxfg[FLEXCAN_TX_BUF_ID].can_ctrl) >> 24) & 0x0F);
 
-	if (cf->can_id & CAN_EFF_FLAG) {
-		can_id = cf->can_id & CAN_EFF_MASK;
+	buf_ret = flexcan_send_buf_pop(dev_num, &cf);
+	if(buf_ret)	{
+		return 0;
+	}
+
+	// 1my_debug("%s.%d: %s have to send: %#08x %#02x [0x%02x%02x%02x%02x,0x%02x%02x%02x%02x]\n", fimx6d.name, dev_num, __func__, cf.can_id, cf.can_dlc, cf.data[0], cf.data[1], cf.data[2], cf.data[3], cf.data[4], cf.data[5], cf.data[6], cf.data[7]);
+
+
+	ctrl = FLEXCAN_MB_CNT_CODE(0xc) | (cf.can_dlc << 16);
+
+	if (cf.can_id & CAN_EFF_FLAG) {
+		can_id = cf.can_id & CAN_EFF_MASK;
 		ctrl |= FLEXCAN_MB_CNT_IDE | FLEXCAN_MB_CNT_SRR;
 	} 
 	else {
-		can_id = (cf->can_id & CAN_SFF_MASK) << 18;
+		can_id = (cf.can_id & CAN_SFF_MASK) << 18;
 	}
 
-	if (cf->can_id & CAN_RTR_FLAG)	{
+	if (cf.can_id & CAN_RTR_FLAG)	{
 		ctrl |= FLEXCAN_MB_CNT_RTR;
 	}
 
-	if (cf->can_dlc > 0) {
-		u32 data = be32_to_cpup((__be32 *)&cf->data[0]);
+	if (cf.can_dlc > 0) {
+		u32 data = be32_to_cpup((__be32 *)&cf.data[0]);
 		writel(data, &regs->cantxfg[FLEXCAN_TX_BUF_ID].data[0]);
 	}	
-	if (cf->can_dlc > 3) {
-		u32 data = be32_to_cpup((__be32 *)&cf->data[4]);
+	if (cf.can_dlc > 3) {
+		u32 data = be32_to_cpup((__be32 *)&cf.data[4]);
 		writel(data, &regs->cantxfg[FLEXCAN_TX_BUF_ID].data[1]);
 	}
 
 	writel(can_id, &regs->cantxfg[FLEXCAN_TX_BUF_ID].can_id);
 	writel(ctrl, &regs->cantxfg[FLEXCAN_TX_BUF_ID].can_ctrl);
 
-	kfree_skb(skb);
-
 	/* tx_packets is incremented in flexcan_irq */
-	stats->tx_bytes += cf->can_dlc;
+	stats->tx_bytes += cf.can_dlc;
 
-	return NETDEV_TX_OK;
+	return 0;
 }
 
-//---------------------------------------------------------------------------------------------------------------------------------------------------------
-
-static int flexcan_transmit_frame(struct sk_buff *skb, struct net_device *dev)
+static void do_bus_err(struct can_frame *cf, u32 reg_esr, u8 dev_num)
 {
-	// const struct flexcan_priv *priv = netdev_priv(dev);
-	// struct net_device_stats *stats = &dev->stats;
-	// struct flexcan_regs __iomem *regs = priv->base;
-	// struct can_frame *cf = (struct can_frame *)skb->data;
-	// u32 can_id;
-	// u32 ctrl = FLEXCAN_MB_CNT_CODE(0xc) | (cf->can_dlc << 16);
-
-	// if (can_dropped_invalid_skb(dev, skb))	{
-	// 	return NETDEV_TX_OK;
-	// }
-
-	// netif_stop_queue(dev);
-
-	// if (cf->can_id & CAN_EFF_FLAG) {
-	// 	can_id = cf->can_id & CAN_EFF_MASK;
-	// 	ctrl |= FLEXCAN_MB_CNT_IDE | FLEXCAN_MB_CNT_SRR;
-	// } 
-	// else {
-	// 	can_id = (cf->can_id & CAN_SFF_MASK) << 18;
-	// }
-
-	// if (cf->can_id & CAN_RTR_FLAG)	{
-	// 	ctrl |= FLEXCAN_MB_CNT_RTR;
-	// }
-
-	// if (cf->can_dlc > 0) {
-	// 	u32 data = be32_to_cpup((__be32 *)&cf->data[0]);
-	// 	writel(data, &regs->cantxfg[FLEXCAN_TX_BUF_ID].data[0]);
-	// }	
-	// if (cf->can_dlc > 3) {
-	// 	u32 data = be32_to_cpup((__be32 *)&cf->data[4]);
-	// 	writel(data, &regs->cantxfg[FLEXCAN_TX_BUF_ID].data[1]);
-	// }
-
-	// writel(can_id, &regs->cantxfg[FLEXCAN_TX_BUF_ID].can_id);
-	// writel(ctrl, &regs->cantxfg[FLEXCAN_TX_BUF_ID].can_ctrl);
-
-	// kfree_skb(skb);
-
-	// /* tx_packets is incremented in flexcan_irq */
-	// stats->tx_bytes += cf->can_dlc;
-
-	return NETDEV_TX_OK;
-}
-
-//---------------------------------------------------------------------------------------------------------------------------------------------------------
-
-static void do_bus_err(struct net_device *dev, struct can_frame *cf, u32 reg_esr)
-{
-	struct flexcan_priv *priv = netdev_priv(dev);
+	struct flexcan_stats *stats = &fimx6d.f_dev[dev_num].stats;
 	int rx_errors = 0, tx_errors = 0;
 
 	cf->can_id |= CAN_ERR_PROT | CAN_ERR_BUSERROR;
 
 	if (reg_esr & FLEXCAN_ESR_BIT1_ERR) {
-		dev_dbg(dev->dev.parent, "BIT1_ERR irq\n");
+		// 1my_debug("%s.%d: %s BIT1_ERR irq\n", fimx6d.name, dev_num, __func__);
 		cf->data[2] |= CAN_ERR_PROT_BIT1;
 		tx_errors = 1;
 	}
 	if (reg_esr & FLEXCAN_ESR_BIT0_ERR) {
-		dev_dbg(dev->dev.parent, "BIT0_ERR irq\n");
+		// 1my_debug("%s.%d: %s BIT0_ERR irq\n", fimx6d.name, dev_num, __func__);
 		cf->data[2] |= CAN_ERR_PROT_BIT0;
 		tx_errors = 1;
 	}
 	if (reg_esr & FLEXCAN_ESR_ACK_ERR) {
-		dev_dbg(dev->dev.parent, "ACK_ERR irq\n");
+		// 1my_debug("%s.%d: %s ACK_ERR irq\n", fimx6d.name, dev_num, __func__);
 		cf->can_id |= CAN_ERR_ACK;
 		cf->data[3] |= CAN_ERR_PROT_LOC_ACK;
 		tx_errors = 1;
 	}
 	if (reg_esr & FLEXCAN_ESR_CRC_ERR) {
-		dev_dbg(dev->dev.parent, "CRC_ERR irq\n");
+		// 1my_debug("%s.%d: %s CRC_ERR irq\n", fimx6d.name, dev_num, __func__);
 		cf->data[2] |= CAN_ERR_PROT_BIT;
 		cf->data[3] |= CAN_ERR_PROT_LOC_CRC_SEQ;
 		rx_errors = 1;
 	}
 	if (reg_esr & FLEXCAN_ESR_FRM_ERR) {
-		dev_dbg(dev->dev.parent, "FRM_ERR irq\n");
+		// 1my_debug("%s.%d: %s FRM_ERR irq\n", fimx6d.name, dev_num, __func__);
 		cf->data[2] |= CAN_ERR_PROT_FORM;
 		rx_errors = 1;
 	}
 	if (reg_esr & FLEXCAN_ESR_STF_ERR) {
-		dev_dbg(dev->dev.parent, "STF_ERR irq\n");
+		// 1my_debug("%s.%d: %s STF_ERR irq\n", fimx6d.name, dev_num, __func__);
 		cf->data[2] |= CAN_ERR_PROT_STUFF;
 		rx_errors = 1;
 	}
 
-	priv->can.can_stats.bus_error++;
+	stats->dev_stats.bus_error++;
 	if (rx_errors)	{
-		dev->stats.rx_errors++;
+		stats->err_rx++;
 	}
 	if (tx_errors)	{
-		dev->stats.tx_errors++;
+		stats->err_tx++;
 	}
 }
 
-static void do_state(struct net_device *dev, struct can_frame *cf, enum can_state new_state)
+static void do_state(struct can_frame *cf, u8 dev_num, enum can_state new_state)
 {
-	struct flexcan_priv *priv = netdev_priv(dev);
+	struct flexcan_stats *stats = &fimx6d.f_dev[dev_num].stats;
 	struct can_berr_counter bec;
 
-	flexcan_get_berr_counter(dev, &bec);
+	// 1my_debug("%s.%d: %s get berr counter\n", fimx6d.name, dev_num, __func__);
+	flexcan_get_berr_counter(dev_num, &bec);
 
-	switch (priv->can.state) {
+	switch (stats->state) {
 	case CAN_STATE_ERROR_ACTIVE:
 		/*
 		 * from: ERROR_ACTIVE
@@ -788,8 +1389,8 @@ static void do_state(struct net_device *dev, struct can_frame *cf, enum can_stat
 		 */
 		if (new_state >= CAN_STATE_ERROR_WARNING &&
 		    new_state <= CAN_STATE_BUS_OFF) {
-			dev_dbg(dev->dev.parent, "Error Warning IRQ\n");
-			priv->can.can_stats.error_warning++;
+			// 1my_debug("%s.%d: %s Error Warning IRQ\n", fimx6d.name, dev_num, __func__);
+			stats->dev_stats.error_warning++;
 
 			cf->can_id |= CAN_ERR_CRTL;
 			cf->data[1] = (bec.txerr > bec.rxerr) ?
@@ -804,8 +1405,8 @@ static void do_state(struct net_device *dev, struct can_frame *cf, enum can_stat
 		 */
 		if (new_state >= CAN_STATE_ERROR_PASSIVE &&
 		    new_state <= CAN_STATE_BUS_OFF) {
-			dev_dbg(dev->dev.parent, "Error Passive IRQ\n");
-			priv->can.can_stats.error_passive++;
+			// 1my_debug("%s.%d: %s Error Passive IRQ\n", fimx6d.name, dev_num, __func__);
+			stats->dev_stats.error_passive++;
 
 			cf->can_id |= CAN_ERR_CRTL;
 			cf->data[1] = (bec.txerr > bec.rxerr) ?
@@ -814,7 +1415,7 @@ static void do_state(struct net_device *dev, struct can_frame *cf, enum can_stat
 		}
 		break;
 	case CAN_STATE_BUS_OFF:
-		dev_err(dev->dev.parent, "BUG! hardware recovered automatically from BUS_OFF\n");
+		// 1my_debug("%s.%d: %s BUG! hardware recovered automatically from BUS_OFF\n", fimx6d.name, dev_num, __func__);
 		break;
 	default:
 		break;
@@ -823,44 +1424,43 @@ static void do_state(struct net_device *dev, struct can_frame *cf, enum can_stat
 	/* process state changes depending on the new state */
 	switch (new_state) {
 	case CAN_STATE_ERROR_ACTIVE:
-		dev_dbg(dev->dev.parent, "Error Active\n");
+		// 1my_debug("%s.%d: %s Error Active\n", fimx6d.name, dev_num, __func__);
 		cf->can_id |= CAN_ERR_PROT;
 		cf->data[2] = CAN_ERR_PROT_ACTIVE;
 		break;
 	case CAN_STATE_BUS_OFF:
 		cf->can_id |= CAN_ERR_BUSOFF;
-		can_bus_off(dev);
+		// can_bus_off(dev);
+		stats->dev_stats.bus_off++;
 		break;
 	default:
 		break;
 	}
 }
 
-static int flexcan_poll(struct napi_struct *napi, int quota)
-{
-	return 0;
-}
-
 static irqreturn_t flexcan_irq(int irq, void *dev_id)
 {
-	struct net_device *dev = dev_id;
-	struct net_device_stats *stats = &dev->stats;
-	struct flexcan_priv *priv = netdev_priv(dev);
-	struct flexcan_regs __iomem *regs = priv->base;
+	u8 dev_num = (irq - IRQ_BASE);
+
+	struct flexcan_stats *stats = &fimx6d.f_dev[dev_num].stats;
+	struct flexcan_regs __iomem *regs = fimx6d.f_dev[dev_num].f_base;
+
 	struct flexcan_mb __iomem *mb = &regs->cantxfg[0];
 	struct timeval time;
 	u32 reg_iflag1, reg_esr;
-	u8 dev_num = (irq - IRQ_BASE);
-	u8 i = 0;
+	u32 i = 0;
+
+	// flexcan_transceiver_switch(fimx6d.f_dev[dev_num].pdata, 1);
 
 	reg_iflag1 = readl(&regs->iflag1);
 	reg_esr = readl(&regs->esr);
+	// // 1my_debug("%s.%d: %s interrupt request, reg_iflag1 = %#08x\n", fimx6d.name, dev_num, __func__, reg_iflag1);
 
-	// fimx6d.f_dev[dev_num].irq_num++;
-	stats->rx_missed_errors++;	// Пока что так считаются прерывания
+	/* Считаем прерывания */
+	stats->int_num++;
 
 	if (reg_esr & FLEXCAN_ESR_WAK_INT) {
-		if (priv->version >= FLEXCAN_VER_10_0_12)	{
+		if (fimx6d.version >= FLEXCAN_VER_10_0_12)	{
 			mxc_iomux_set_gpr_register(13, 28, 1, 0);
 		}
 		writel(FLEXCAN_ESR_WAK_INT, &regs->esr);
@@ -868,28 +1468,29 @@ static irqreturn_t flexcan_irq(int irq, void *dev_id)
 
 	if (reg_iflag1 & FLEXCAN_IFLAG_DEFAULT)	{
 		if(reg_iflag1 & FLEXCAN_IFLAG_RX_FIFO_OVERFLOW)	{
-			// fimx6d.f_dev[dev_num].stats.err_over++;
-			stats->rx_over_errors++;
+			stats->err_over++;
+			stats->err_drop++;
 		}
 		else if(reg_iflag1 & FLEXCAN_IFLAG_RX_FIFO_WARN)	{
-			// fimx6d.f_dev[dev_num].stats.err_warn++;
-			stats->rx_length_errors++;
+			stats->err_warn++;
 		}
+			stats->int_rx_frame++;
 
-		fimx6d.f_dev[dev_num].stats.frame_req++;
+		// // 1my_debug("%s.%d: read buffer contain data: CTRL %#08x, ID %#08x, DATA0 %#08x, DATA1 %#08x\n", 
+		// 			fimx6d.name, dev_num, mb->can_ctrl, mb->can_id, mb->data[0], mb->data[1]);
 
-		i = 6;
-		while(i && (reg_iflag1 & FLEXCAN_IFLAG_RX_FIFO_AVAILABLE))	{	
+		i = 0;
+		while((i < 10) && (reg_iflag1 & FLEXCAN_IFLAG_RX_FIFO_AVAILABLE))	{	
 			do_gettimeofday(&time);
-			if(flexcan_buf_push(&dev_num, mb, &time))	{
+			stats->rx_bytes += ((mb->can_ctrl >> 16) & 0xf);
+			if(flexcan_recv_buf_push(dev_num, mb, &time))	{
 				/* буффер заполнен */
-				fimx6d.f_dev[dev_num].stats.err_drop++;
-				stats->rx_fifo_errors++;
+				stats->err_drop++;
+				stats->err_fifo++;
 			}
 			else 	{
 				/* все хорошо */
-				// fimx6d.f_dev[dev_num].stats.rx_frames++;
-				stats->rx_packets++;
+				stats->rx_frames++;
 			}
 
 			if(reg_iflag1 & FLEXCAN_IFLAG_RX_FIFO_OVERFLOW)	{
@@ -904,100 +1505,84 @@ static irqreturn_t flexcan_irq(int irq, void *dev_id)
 
 			reg_iflag1 = readl(&regs->iflag1);
 			readl(&regs->timer);
-			i--;
+			i++;
 		}
 	}
 
-	if ((reg_esr & FLEXCAN_ESR_ERR_STATE) || (flexcan_has_and_handle_berr(priv, reg_esr)))	{
-		// fimx6d.f_dev[dev_num].stats.state_req++;
+	if ((reg_esr & FLEXCAN_ESR_ERR_STATE) || (flexcan_has_and_handle_berr(stats, reg_esr)))	{
+		stats->int_state++;
 
-		stats->rx_errors++;
-		priv->reg_esr = reg_esr & FLEXCAN_ESR_ERR_BUS;
+		stats->reg_esr = reg_esr & FLEXCAN_ESR_ERR_BUS;
 		writel(reg_esr, &regs->esr);
-		// writel(reg_ctrl_default, &regs->ctrl);										// Исправить!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		// napi_schedule(&priv->napi);	
+		writel(fimx6d.f_dev[dev_num].reg_ctrl_default, &regs->ctrl);			
 	}
 
 	if (reg_iflag1 & (1 << FLEXCAN_TX_BUF_ID)) {			/* transmission complete interrupt */
 		/* tx_bytes is incremented in flexcan_start_xmit */
-		// fimx6d.f_dev[dev_num].stats.tx_frames++;
-
-		stats->tx_packets++;
+		stats->int_tx_frame++;
+		stats->tx_frames++;
 		writel((1 << FLEXCAN_TX_BUF_ID), &regs->iflag1);
-		// netif_wake_queue(dev);
+		// // 1my_debug("%s.%d: transmit buffer was contain data: CTRL %#08x, ID %#08x, DATA0 %#08x, DATA1 %#08x\n", 
+		// 			fimx6d.name, dev_num, mb->can_ctrl, mb->can_id, mb->data[0], mb->data[1]);
 	}
+
+	// flexcan_transceiver_switch(fimx6d.f_dev[dev_num].pdata, 0);
 
 	return IRQ_HANDLED;
 }
 
-static void flexcan_set_bittiming(struct net_device *dev)
+
+
+
+static void flexcan_set_bittiming(const u8 dev_num, const u32 reg_ctrl)
 {
-	const struct flexcan_priv *priv = netdev_priv(dev);
-	const struct can_bittiming *bt = &priv->can.bittiming;
-	struct flexcan_regs __iomem *regs = priv->base;
+	struct flexcan_stats *stats = &fimx6d.f_dev[dev_num].stats;
+	struct flexcan_regs __iomem *regs = fimx6d.f_dev[dev_num].f_base;
 	u32 reg;
 
 	reg = readl(&regs->ctrl);
-	reg &= ~(FLEXCAN_CTRL_PRESDIV(0xff) | FLEXCAN_CTRL_RJW(0x3) |
-		 FLEXCAN_CTRL_PSEG1(0x7) | FLEXCAN_CTRL_PSEG2(0x7) |
-		 FLEXCAN_CTRL_PROPSEG(0x7) | FLEXCAN_CTRL_LPB |
-		 FLEXCAN_CTRL_SMP | FLEXCAN_CTRL_LOM);
 
-	reg |= FLEXCAN_CTRL_PRESDIV(bt->brp - 1) |
-		FLEXCAN_CTRL_PSEG1(bt->phase_seg1 - 1) |
-		FLEXCAN_CTRL_PSEG2(bt->phase_seg2 - 1) |
-		FLEXCAN_CTRL_RJW(bt->sjw - 1) |
-		FLEXCAN_CTRL_PROPSEG(bt->prop_seg - 1);
-	// reg |= FLEXCAN_CTRL_PRESDIV(0x01) |
-	// 	FLEXCAN_CTRL_PSEG1(0x07) |
-	// 	FLEXCAN_CTRL_PSEG2(0x01) |
-	// 	FLEXCAN_CTRL_RJW(0x00) |
-	// 	FLEXCAN_CTRL_PROPSEG(0x03);
+	reg &= ~(FLEXCAN_BTRT_MASK | FLEXCAN_CTRL_LPB | FLEXCAN_CTRL_SMP | FLEXCAN_CTRL_LOM);
+	reg |= reg_ctrl;
 
-	if (priv->can.ctrlmode & CAN_CTRLMODE_LOOPBACK)	{
-		reg |= FLEXCAN_CTRL_LPB;
-	}
-	if (priv->can.ctrlmode & CAN_CTRLMODE_LISTENONLY)	{
-		reg |= FLEXCAN_CTRL_LOM;
-	}
-	if (priv->can.ctrlmode & CAN_CTRLMODE_3_SAMPLES)	{
-		reg |= FLEXCAN_CTRL_SMP;
-	}
-
-	dev_info(dev->dev.parent, "writing ctrl=0x%08x\n", reg);
+	// 1my_debug("%s.%d: %s writing ctrl=0x%08x\n", fimx6d.name, dev_num, __func__, reg);
 	writel(reg, &regs->ctrl);
-	// printk("FLEXCANx_CTRL regisrer\n");
-	// printk("PRESDIV  RJW  PSEG1  PSEG2  PROP_SEG\n");
-	// printk(" 0x%02x    0x%01x   0x%01x    0x%01x     0x%01x\n", ((reg & 0xFF000000) >> 24), ((reg & 0x00E00000) >> 22), ((reg & 0x00380000) >> 19), ((reg & 0x00070000) >> 16), (reg & 0x00000007));
+	stats->reg_mcr = readl(&regs->mcr);
+	stats->reg_ctrl = readl(&regs->ctrl);
 
 	/* print chip status */
-	dev_dbg(dev->dev.parent, "%s: mcr=0x%08x ctrl=0x%08x\n", __func__, readl(&regs->mcr), readl(&regs->ctrl));
+	// 1my_debug("%s.%d: %s mcr=0x%08x ctrl=0x%08x\n", fimx6d.name, dev_num, __func__, readl(&regs->mcr), readl(&regs->ctrl));
 }
 
-/* flexcan_chip_start
- * this functions is entered with clocks enabled
- */
-static int flexcan_chip_start(struct net_device *dev)
+
+
+static int flexcan_chip_start(const u8 dev_num)
 {
-	struct flexcan_priv *priv = netdev_priv(dev);
-	struct flexcan_regs __iomem *regs = priv->base;
+	struct flexcan_stats *stats = &fimx6d.f_dev[dev_num].stats;
+	struct flexcan_regs __iomem *regs = fimx6d.f_dev[dev_num].f_base;
 	unsigned int i;
 	int err;
-	u32 reg_mcr, reg_ctrl, reg_imask1;
+	u32 reg_mcr, reg_ctrl;
 
 	/* enable module */
-	flexcan_chip_enable(priv);
+	// 1my_debug("%s.%d: %s enable module\n", fimx6d.name, dev_num, __func__);
+	flexcan_chip_enable(fimx6d.f_dev[dev_num].f_base);
+
 	/* soft reset */
+	// 1my_debug("%s.%d: %s soft reset\n", fimx6d.name, dev_num, __func__);
 	writel(FLEXCAN_MCR_SOFTRST, &regs->mcr);
 	udelay(10);
 
 	reg_mcr = readl(&regs->mcr);
 	if (reg_mcr & FLEXCAN_MCR_SOFTRST) {
-		dev_err(dev->dev.parent, "Failed to softreset can module, mcr=0x%08x\n", reg_mcr);
+		// 1my_debug("%s.%d: %s failed to softreset can module, mcr=0x%08x\n", fimx6d.name, dev_num, __func__, reg_mcr);
 		err = -ENODEV;
 		goto out;
 	}
-	flexcan_set_bittiming(dev);
+
+	// 1my_debug("%s.%d: %s set bittiming\n", fimx6d.name, dev_num, __func__);
+	flexcan_set_bittiming(dev_num, fimx6d.f_dev[dev_num].reg_ctrl_bittiming);
+
 	/* MCR
 	 * enable freeze | enable fifo | halt now  | only supervisor access  | 
 	 * enable warning int |  choose format C  | enable self wakeup
@@ -1006,9 +1591,9 @@ static int flexcan_chip_start(struct net_device *dev)
 	reg_mcr |= FLEXCAN_MCR_FRZ | FLEXCAN_MCR_FEN | FLEXCAN_MCR_HALT | FLEXCAN_MCR_SUPV | 
 		FLEXCAN_MCR_WRN_EN | FLEXCAN_MCR_IDAM_C | FLEXCAN_MCR_WAK_MSK | FLEXCAN_MCR_SLF_WAK;
 	
-	dev_dbg(dev->dev.parent, "%s: writing mcr=0x%08x", __func__, reg_mcr);
-
+	// 1my_debug("%s.%d: %s writing mcr=0x%08x\n", fimx6d.name, dev_num, __func__, reg_mcr);
 	writel(reg_mcr, &regs->mcr);
+	stats->reg_mcr = readl(&regs->mcr);
 	/* CTRL
 	 * disable timer sync feature | disable auto busoff recovery | transmit lowest buffer first
 	 * enable tx and rx warning interrupt | enable bus off interrupt (== FLEXCAN_CTRL_ERR_STATE)
@@ -1019,11 +1604,13 @@ static int flexcan_chip_start(struct net_device *dev)
 	reg_ctrl &= ~FLEXCAN_CTRL_TSYN;
 	// reg_ctrl |= /*FLEXCAN_CTRL_BOFF_REC | */ FLEXCAN_CTRL_LBUF |/*| FLEXCAN_CTRL_ERR_STATE | */FLEXCAN_CTRL_ERR_MSK ;
 	reg_ctrl |= FLEXCAN_CTRL_BOFF_REC | FLEXCAN_CTRL_LBUF;
+
 	/* save for later use */
-	// reg_ctrl_default = reg_ctrl;																			//Исправить!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	priv->reg_ctrl_default = reg_ctrl;
-	dev_dbg(dev->dev.parent, "%s: writing ctrl=0x%08x", __func__, reg_ctrl);
+	fimx6d.f_dev[dev_num].reg_ctrl_default = reg_ctrl;
+
+	// 1my_debug("%s.%d: %s writing ctrl=0x%08x\n", fimx6d.name, dev_num, __func__, reg_ctrl);
 	writel(reg_ctrl, &regs->ctrl);
+	stats->reg_ctrl = readl(&regs->ctrl);
 
 	for (i = 0; i < ARRAY_SIZE(regs->cantxfg); i++) {
 		writel(0, &regs->cantxfg[i].can_ctrl);
@@ -1039,7 +1626,7 @@ static int flexcan_chip_start(struct net_device *dev)
 	writel(0x0, &regs->rx15mask);
 
 	/* clear rx fifo global mask */
-	if (priv->version >= FLEXCAN_VER_10_0_12)	{
+	if (fimx6d.version >= FLEXCAN_VER_10_0_12)	{
 		writel(0x0, &regs->rxfgmask);
 	}
 	// flexcan_transceiver_switch(priv, 1);						//заменить priv  на pdata из структуры вызывающего устройства
@@ -1048,100 +1635,115 @@ static int flexcan_chip_start(struct net_device *dev)
 	reg_mcr = readl(&regs->mcr);
 	reg_mcr &= ~FLEXCAN_MCR_HALT;
 	writel(reg_mcr, &regs->mcr);
+	stats->reg_mcr = readl(&regs->mcr);
 
-	priv->can.state = CAN_STATE_ERROR_ACTIVE;
+	stats->state = CAN_STATE_ERROR_ACTIVE;
+
 	/* enable FIFO interrupts */
 	writel(FLEXCAN_IFLAG_DEFAULT, &regs->imask1);
+
 	/* print chip status */
-	dev_dbg(dev->dev.parent, "%s: reading mcr=0x%08x ctrl=0x%08x\n", __func__, readl(&regs->mcr), readl(&regs->ctrl));
+	// 1my_debug("%s.%d: %s reading mcr=0x%08x ctrl=0x%08x\n", fimx6d.name, dev_num, __func__, readl(&regs->mcr), readl(&regs->ctrl));
+
+	// // 1my_debug("%s.%d: %s registereng /proc file\n", fimx6d.name, dev_num, __func__);
+	flexcan_proc_file_init(dev_num);
 
 	return 0;
 
  out:
-	flexcan_chip_disable(priv);
+ 	// 1my_debug("%s.%d: %s chip disable\n", fimx6d.name, dev_num, __func__);
+	flexcan_chip_disable(fimx6d.f_dev[dev_num].f_base);
 	return err;
 }
 
-/* flexcan_chip_stop
- * this functions is entered with clocks enabled
- */
-static void flexcan_chip_stop(struct net_device *dev)
+
+static void flexcan_chip_stop(const u8 dev_num)
 {
-	struct flexcan_priv *priv = netdev_priv(dev);
-	struct flexcan_regs __iomem *regs = priv->base;
+	struct flexcan_stats *stats = &fimx6d.f_dev[dev_num].stats;
+	struct flexcan_regs __iomem *regs = fimx6d.f_dev[dev_num].f_base;
 	u32 reg;
+
+	// 1my_debug("%s.%d: %s was call with dev_num = %d\n", fimx6d.name, dev_num, __func__, dev_num);
+	
+	regs = fimx6d.f_dev[dev_num].f_base;
+	// // 1my_debug("%s.%d: %s unregistereng /proc file\n", fimx6d.name, dev_num, __func__);
+	flexcan_proc_file_exit(dev_num);
 
 	/* Disable all interrupts */
 	writel(0, &regs->imask1);
+
 	/* Disable + halt module */
 	reg = readl(&regs->mcr);
 	reg |= FLEXCAN_MCR_MDIS | FLEXCAN_MCR_HALT;
 	writel(reg, &regs->mcr);
+	stats->reg_mcr = readl(&regs->mcr);
 
 	// flexcan_transceiver_switch(priv, 0);						//заменить priv  на pdata из структуры вызывающего устройства
-	priv->can.state = CAN_STATE_STOPPED;
+	stats->state = CAN_STATE_STOPPED;
 }
 
-static int flexcan_net_open(struct net_device *dev)
+static int flexcan_net_open(const u8 dev_num)
 {
-	struct flexcan_priv *priv = netdev_priv(dev);
+	unsigned int irq = fimx6d.f_dev[dev_num].irq_num;
 	int err;
 
-	clk_enable(priv->clk);
+	// 1my_debug("%s.%d: %s clk enable\n", fimx6d.name, dev_num, __func__);
+	clk_enable(fimx6d.f_dev[dev_num].clk);
 
-	err = open_candev(dev);
+	err = request_irq(irq, flexcan_irq, IRQF_SHARED, fimx6d.f_dev[dev_num].name, fimx6d.f_dev[dev_num].pdata);
+	// err = request_irq(irq, flexcan_irq, IRQF_SHARED, fimx6d.f_dev[dev_num].name, &fimx6d.f_dev[dev_num].f_cdev);
+	if (err)	{
+		// 1my_debug("%s.%d: %s request irq %d failed with err = %d\n", fimx6d.name, dev_num, __func__, irq, err);
+		goto out;
+	}
+	else 	{
+		// 1my_debug("%s.%d: %s request irq %d success\n", fimx6d.name, dev_num, __func__, irq);
+	}
+	/* start chip and queuing */
+	// 1my_debug("%s.%d: %s chip start\n", fimx6d.name, dev_num, __func__);
+	err = flexcan_chip_start(dev_num);
 	if (err)	{
 		goto out;
 	}
-	err = request_irq(dev->irq, flexcan_irq, IRQF_SHARED, dev->name, dev);
-	if (err)	{
-		goto out_close;
-	}
-	/* start chip and queuing */
-	err = flexcan_chip_start(dev);
-	if (err)	{
-		goto out_close;
-	}
-	napi_enable(&priv->napi);
-	netif_start_queue(dev);
 
 	return 0;
 
- out_close:
-	close_candev(dev);
  out:
-	clk_disable(priv->clk);
+ 	// 1my_debug("%s.%d: %s goto out. clk disable\n", fimx6d.name, dev_num, __func__);
+	clk_disable(fimx6d.f_dev[dev_num].clk);
 
 	return err;
 }
 
-static int flexcan_net_close(struct net_device *dev)
+static int flexcan_net_close(const u8 dev_num)
 {
-	struct flexcan_priv *priv = netdev_priv(dev);
+	unsigned int irq = fimx6d.f_dev[dev_num].irq_num;
 
-	netif_stop_queue(dev);
-	napi_disable(&priv->napi);
-	flexcan_chip_stop(dev);
+	// 1my_debug("%s.%d: %s chip stop\n", fimx6d.name, dev_num, __func__);
+	flexcan_chip_stop(dev_num);
 
-	free_irq(dev->irq, dev);
-	clk_disable(priv->clk);
+	// 1my_debug("%s.%d: %s free irq\n", fimx6d.name, dev_num, __func__);
+	// free_irq(irq, &fimx6d.f_dev[dev_num].f_cdev);
+	free_irq(irq, fimx6d.f_dev[dev_num].pdata);
 
-	close_candev(dev);
+	// 1my_debug("%s.%d: %s clk disable\n", fimx6d.name, dev_num, __func__);
+	clk_disable(fimx6d.f_dev[dev_num].clk);
 
 	return 0;
 }
 
-static int flexcan_set_mode(struct net_device *dev, enum can_mode mode)
+static int flexcan_set_mode(const u8 dev_num, enum can_mode mode)
 {
 	int err;
 
 	switch (mode) {
 	case CAN_MODE_START:
-		err = flexcan_chip_start(dev);
+		err = flexcan_chip_start(dev_num);
 		if (err)	{
 			return err;
 		}
-		netif_wake_queue(dev);
+		// netif_wake_queue(dev);
+		// и зачем мне эта функция теперь?
 		break;
 	default:
 		return -EOPNOTSUPP;
@@ -1150,27 +1752,22 @@ static int flexcan_set_mode(struct net_device *dev, enum can_mode mode)
 	return 0;
 }
 
-static const struct net_device_ops flexcan_netdev_ops = {
-	.ndo_open	= 		flexcan_net_open,
-	.ndo_stop	= 		flexcan_net_close,
-	.ndo_start_xmit	= 	flexcan_net_start_xmit,
-};
-
-static int __devinit register_flexcandev(struct net_device *dev)
+static int __devinit register_flexcandev(const u8 dev_num)
 {
-	struct flexcan_priv *priv = netdev_priv(dev);
-	struct flexcan_regs __iomem *regs = priv->base;
+	struct flexcan_regs __iomem *regs = fimx6d.f_dev[dev_num].f_base;
 	u32 reg, err;
 
-	clk_enable(priv->clk);
+	clk_enable(fimx6d.f_dev[dev_num].clk);
+	// 1my_debug("%s.%d: %s clk enable\n", fimx6d.name, dev_num, __func__);
 
 	/* select "bus clock", chip must be disabled */
-	flexcan_chip_disable(priv);
+	flexcan_chip_disable(fimx6d.f_dev[dev_num].f_base);
 	reg = readl(&regs->ctrl);
 	reg |= FLEXCAN_CTRL_CLK_SRC;
 	writel(reg, &regs->ctrl);
 
-	flexcan_chip_enable(priv);
+	flexcan_chip_enable(fimx6d.f_dev[dev_num].f_base);
+	// 1my_debug("%s.%d: %s chip enable\n", fimx6d.name, dev_num, __func__);
 	/* set freeze, halt and activate FIFO, restrict register access */
 	reg = readl(&regs->mcr);
 	reg |= FLEXCAN_MCR_FRZ | FLEXCAN_MCR_HALT | FLEXCAN_MCR_FEN | FLEXCAN_MCR_SUPV;
@@ -1182,24 +1779,17 @@ static int __devinit register_flexcandev(struct net_device *dev)
 	 */
 	reg = readl(&regs->mcr);
 	if (!(reg & FLEXCAN_MCR_FEN)) {
-		dev_err(dev->dev.parent, "Could not enable RX FIFO, unsupported core\n");
+		// 1my_debug("%s.%d: %s Could not enable RX FIFO, unsupported core\n", fimx6d.name, dev_num, __func__);
 		err = -ENODEV;
 		goto out;
 	}
 
-	err = register_candev(dev);
-
  out:
 	/* disable core and turn off clocks */
-	flexcan_chip_disable(priv);
-	clk_disable(priv->clk);
+ 	flexcan_chip_disable(fimx6d.f_dev[dev_num].f_base);
+	clk_disable(fimx6d.f_dev[dev_num].clk);
 
 	return err;
-}
-
-static void __devexit unregister_flexcandev(struct net_device *dev)
-{
-	unregister_candev(dev);
 }
 
 static struct platform_device_id flexcan_devtype[] = {
@@ -1223,16 +1813,15 @@ static struct platform_device_id flexcan_devtype[] = {
 
 static int __devinit flexcan_probe(struct platform_device *pdev)
 {
-	struct net_device *dev;
-	struct flexcan_priv *priv;
 	struct resource *mem;
 	struct clk *clk;
 	void __iomem *base;
 	resource_size_t mem_size;
-	int err, irq;
+	int err, irq, major;
+	char name0[IFNAMSIZ] = "can0";
+	char name1[IFNAMSIZ] = "can1";
 
 	printk("%s driver ver %s by Strim-tech\n", DRV_NAME, DRV_VER);
-	printk("sizeof(flexcan_frame) = %d, 0x%08x\n", sizeof(struct flexcan_frame), sizeof(struct flexcan_frame));
 
 	/* pdev->id 	- ID устройства (0 или 1)
 	 * dev->irq 	- IRQ number
@@ -1266,64 +1855,44 @@ static int __devinit flexcan_probe(struct platform_device *pdev)
 		goto failed_map;
 	}
 
-	dev = alloc_candev(sizeof(struct flexcan_priv), 0);
-	if (!dev) {
-		err = -ENOMEM;
-		goto failed_alloc;
-	}
-
-	dev->netdev_ops = &flexcan_netdev_ops;
-	dev->irq = irq;
-	dev->flags |= IFF_ECHO; /* we support local echo in hardware */
-
-	// printk("net_device->dev_id = %d", dev->dev_id);
-
-	priv = netdev_priv(dev);
-	priv->can.clock.freq = clk_get_rate(clk);
-	priv->can.bittiming_const = &flexcan_bittiming_const;
-	priv->can.do_set_mode = flexcan_set_mode;
-	priv->can.do_get_berr_counter = flexcan_get_berr_counter;
-	priv->can.ctrlmode_supported = CAN_CTRLMODE_LOOPBACK | CAN_CTRLMODE_LISTENONLY | CAN_CTRLMODE_3_SAMPLES | CAN_CTRLMODE_BERR_REPORTING;
-	priv->base = base;
-	priv->dev = dev;
-	priv->clk = clk;
-	priv->pdata = pdev->dev.platform_data;
-	priv->version = pdev->id_entry->driver_data;
-
 	flexcan_f_dev_init(&(fimx6d.f_dev[pdev->id]));
 	fimx6d.f_dev[pdev->id].irq_num = irq;
 	fimx6d.f_dev[pdev->id].stats.freq = clk_get_rate(clk);
 	fimx6d.f_dev[pdev->id].stats.bittiming_const = &flexcan_bittiming_const;
-	// fimx6d.f_dev[pdev->id].do_set_mode = flexcan_set_mode;			// вернуть когда буду убирать netdevice
-	// fimx6d.f_dev[pdev->id].do_get_berr_counter = flexcan_get_berr_counter;
-	fimx6d.f_base = base;
+	fimx6d.f_dev[pdev->id].do_set_mode = flexcan_set_mode;			// вернуть когда буду убирать netdevice
+	fimx6d.f_dev[pdev->id].do_get_berr_counter = flexcan_get_berr_counter;
+	fimx6d.f_dev[pdev->id].stats.ctrlmode_supported = CAN_CTRLMODE_LOOPBACK | CAN_CTRLMODE_LISTENONLY | CAN_CTRLMODE_3_SAMPLES | CAN_CTRLMODE_BERR_REPORTING;
+	fimx6d.f_dev[pdev->id].f_base = base;
 	fimx6d.f_dev[pdev->id].clk = clk;
 	fimx6d.f_dev[pdev->id].pdata = pdev->dev.platform_data;
 	fimx6d.version = pdev->id_entry->driver_data;
 	memcpy(fimx6d.name, pdev->id_entry->name, sizeof(fimx6d.name));
-
-	netif_napi_add(dev, &priv->napi, flexcan_poll, FLEXCAN_NAPI_WEIGHT);
-	dev_set_drvdata(&pdev->dev, dev);
-	SET_NETDEV_DEV(dev, &pdev->dev);
-
-	err = register_flexcandev(dev);
-	if (err) {
-		dev_err(&pdev->dev, "registering netdev failed\n");
-		goto failed_register;
-	}
-
-    memcpy(fimx6d.f_dev[pdev->id].name, dev->name, sizeof(fimx6d.f_dev[pdev->id].name));
+	
+    if(pdev->id == 0)	{
+		memcpy(fimx6d.f_dev[pdev->id].name, name0, sizeof(fimx6d.f_dev[pdev->id].name));
+    }
+    else if(pdev->id == 1) 	{
+    	memcpy(fimx6d.f_dev[pdev->id].name, name1, sizeof(fimx6d.f_dev[pdev->id].name));
+    }
+    // 1my_debug("%s.%d: %s device name = %s\n",fimx6d.name, pdev->id, __func__, fimx6d.f_dev[pdev->id].name);
 
 	if(!fimx6d.is_init)	{
-		err = alloc_chrdev_region(&fimx6d.f_dev[pdev->id].f_devt, DEV_FIRST, DEV_COUNT, fimx6d.name);
+		err = alloc_chrdev_region(&fimx6d.f_devt, DEV_FIRST, DEV_COUNT, fimx6d.name);
 		if (err < 0) {
 			err = -1;
+			// 1my_debug("%s.%d: %s alloc chrdev region failed\n",fimx6d.name, pdev->id, __func__);
 			goto err_reg_chrdev;
 		} 
+		else 	{
+			// 1my_debug("%s.%d: %s alloc chrdev region success, major = %d\n",fimx6d.name, pdev->id, __func__, MAJOR(fimx6d.f_devt));	
+		}
 	}
-	fimx6d.major = MAJOR(fimx6d.f_dev[pdev->id].f_devt);
-	fimx6d.f_dev[pdev->id].f_devt = MKDEV(fimx6d.major, pdev->id);  
+	major = MAJOR(fimx6d.f_devt);
+	// 1my_debug("%s.%d: %s major = %d, pdev->id = %d\n",fimx6d.name, pdev->id, __func__, major, pdev->id);	
+
+	fimx6d.f_dev[pdev->id].f_devt = MKDEV(major, pdev->id);  
 			
+	// 1my_debug("%s.%d: %s c_dev init\n",fimx6d.name, pdev->id, __func__);	
 	cdev_init(&fimx6d.f_dev[pdev->id].f_cdev, &flexcan_fops);
 	fimx6d.f_dev[pdev->id].f_cdev.owner = THIS_MODULE;
 	fimx6d.f_dev[pdev->id].f_cdev.ops = &flexcan_fops;
@@ -1331,24 +1900,40 @@ static int __devinit flexcan_probe(struct platform_device *pdev)
 	err = cdev_add(&fimx6d.f_dev[pdev->id].f_cdev, fimx6d.f_dev[pdev->id].f_devt, 1);
 	if(err)	{
 		err = -1;
+		// 1my_debug("%s.%d: %s c_dev add error\n",fimx6d.name, pdev->id, __func__);
 		goto err_cdev_add;
+	}
+	else 	{
+		// 1my_debug("%s.%d: %s c_dev was added\n",fimx6d.name, pdev->id, __func__);
 	}
 
 	if(!fimx6d.is_init)	{
 	    if ((fimx6d.f_class = class_create(THIS_MODULE, fimx6d.name)) == NULL)	{
 			err = -1;
+			// 1my_debug("%s.%d: %s class create error\n",fimx6d.name, pdev->id, __func__);
 			goto err_class_create;
+		}
+		else 	{
+			flexcan_proc_dir_init();
+			// 1my_debug("%s.%d: %s class was create with name = %s\n",fimx6d.name, pdev->id, __func__, fimx6d.name);
 		}
 	}
 
-	if (device_create(fimx6d.f_class, &pdev->dev, fimx6d.f_dev[pdev->id].f_devt, NULL, dev->name) == NULL)	{
+	if (device_create(fimx6d.f_class, &pdev->dev, fimx6d.f_dev[pdev->id].f_devt, NULL, fimx6d.f_dev[pdev->id].name) == NULL)	{
 		err = -1;
+		// 1my_debug("%s.%d: %s device create error\n",fimx6d.name, pdev->id, __func__);
 		goto err_device_create;
+	}
+	else 	{
+		// 1my_debug("%s.%d: %s device was create with name = %s\n",fimx6d.name, pdev->id, __func__, fimx6d.f_dev[pdev->id].name);
 	}
 
 	if(!fimx6d.is_init)	{
     	fimx6d.is_init = 1;
+    	// flexcan_proc_dir_init();
     }
+
+    flexcan_net_open(pdev->id);
 
 	return 0;
 
@@ -1362,10 +1947,6 @@ static int __devinit flexcan_probe(struct platform_device *pdev)
  		unregister_chrdev_region(fimx6d.f_dev[pdev->id].f_devt, DEV_COUNT);
  	}
  err_reg_chrdev:
-
- failed_register:
-	free_candev(dev);
- failed_alloc:
 	iounmap(base);
  failed_map:
 	release_mem_region(mem->start, mem_size);
@@ -1377,33 +1958,42 @@ static int __devinit flexcan_probe(struct platform_device *pdev)
 
 static int __devexit flexcan_remove(struct platform_device *pdev)
 {
-	struct net_device *dev = platform_get_drvdata(pdev);
-	struct flexcan_priv *priv = netdev_priv(dev);
 	struct resource *mem;
 
+	// 1my_debug("%s.%d: %s remove flexcan driver start\n", fimx6d.name, pdev->id, __func__);
+
+	flexcan_net_close(pdev->id);
+
+	// flexcan_proc_file_exit(pdev->id);
+	// 1my_debug("%s.%d: %s device destroy\n", fimx6d.name, pdev->id, __func__);
 	device_destroy(fimx6d.f_class, fimx6d.f_dev[pdev->id].f_devt);
 	if(!fimx6d.is_init)	{
+		flexcan_proc_dir_exit();
 		class_destroy(fimx6d.f_class);
 	}
 
+	// 1my_debug("%s.%d: %s cdev del\n", fimx6d.name, pdev->id, __func__);
 	cdev_del(&fimx6d.f_dev[pdev->id].f_cdev);
 	if(!fimx6d.is_init)	{
 		unregister_chrdev_region(fimx6d.f_dev[pdev->id].f_devt, DEV_COUNT);
+
+		/* нужно перенести, но куда?..... */
+		// flexcan_proc_dir_exit();
 	}
 
 	if(fimx6d.is_init)	{
     	fimx6d.is_init = 0;
     }
 
-	unregister_flexcandev(dev);
 	platform_set_drvdata(pdev, NULL);
-	iounmap(priv->base);
+	// 1my_debug("%s.%d: %s iounmap\n", fimx6d.name, pdev->id, __func__);
+	iounmap(fimx6d.f_dev[pdev->id].f_base);
 
 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	// 1my_debug("%s.%d: %s release mem region\n", fimx6d.name, pdev->id, __func__);
 	release_mem_region(mem->start, resource_size(mem));
 
-	clk_put(priv->clk);
-	free_candev(dev);
+	clk_put(fimx6d.f_dev[pdev->id].clk);
 
 	return 0;
 }
@@ -1411,21 +2001,14 @@ static int __devexit flexcan_remove(struct platform_device *pdev)
 #ifdef CONFIG_PM
 static int flexcan_suspend(struct platform_device *pdev, pm_message_t state)
 {
-	struct net_device *dev = platform_get_drvdata(pdev);
-	struct flexcan_priv *priv = netdev_priv(dev);
 	int ret;
 
-	if (netif_running(dev)) {
-		netif_stop_queue(dev);
-		netif_device_detach(dev);
-	}
-
-	priv->can.state = CAN_STATE_SLEEPING;
+	fimx6d.f_dev[pdev->id].stats.state = CAN_STATE_SLEEPING;
 	/* enable stop request for wakeup */
-	if (priv->version >= FLEXCAN_VER_10_0_12)
+	if (fimx6d.version >= FLEXCAN_VER_10_0_12)
 		mxc_iomux_set_gpr_register(13, 28, 1, 1);
 
-	ret = irq_set_irq_wake(dev->irq, 1);
+	ret = irq_set_irq_wake(fimx6d.f_dev[pdev->id].irq_num, 1);
 	if (ret)	{
 		return ret;
 	}
@@ -1435,20 +2018,14 @@ static int flexcan_suspend(struct platform_device *pdev, pm_message_t state)
 
 static int flexcan_resume(struct platform_device *pdev)
 {
-	struct net_device *dev = platform_get_drvdata(pdev);
-	struct flexcan_priv *priv = netdev_priv(dev);
 	int ret;
 
-	ret = irq_set_irq_wake(dev->irq, 0);
+	// 1my_debug("%s.%d: %s irq set irq wake\n", fimx6d.name, pdev->id, __func__);
+	ret = irq_set_irq_wake(fimx6d.f_dev[pdev->id].irq_num, 0);
 	if (ret)	{
 		return ret;
 	}
-	priv->can.state = CAN_STATE_ERROR_ACTIVE;
-
-	if (netif_running(dev)) {
-		netif_device_attach(dev);
-		netif_start_queue(dev);
-	}
+	fimx6d.f_dev[pdev->id].stats.state = CAN_STATE_ERROR_ACTIVE;
 
 	return 0;
 }
