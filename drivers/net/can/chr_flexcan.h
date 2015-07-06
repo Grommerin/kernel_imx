@@ -9,8 +9,8 @@
 
 #define SET_DRIVER_DEBUG_MASK		0x000000f0 		/* For check set debug in message */
 #define SET_DRIVER_DEBUG_ON			(0xC << 4)		/* Turn on debug messages in griver */
-#define SET_DRIVER_DEBUG_OFF		(0x8 << 4)		/* Turn off debug messages in griver */
-#define SET_DRIVER_DEBUG_L0			(0x0 << 4)		/* Set level of debug messages as 0, few reports */
+#define SET_DRIVER_DEBUG_OFF		(0x0 << 4)		/* Turn off debug messages in griver */
+#define SET_DRIVER_DEBUG_L0			(0x8 << 4)		/* Set level of debug messages as 0, few reports */
 #define SET_DRIVER_DEBUG_L1			(0x1 << 4)		/* Set level of debug messages as 1, average reports */
 #define SET_DRIVER_DEBUG_L2			(0x2 << 4)		/* Set level of debug messages as 2, many reports */
 #define SET_DRIVER_DEBUG_L3			(0x3 << 4)		/* Set level of debug messages as 3, all reports */
@@ -144,42 +144,6 @@ struct flexcan_stats {
 	struct can_bittiming_const *bittiming_const;
 };
 
-// struct flexcan_stats {
-// 	__u32 rx_frames;		// количество принятых фреймов
-// 	__u32 tx_frames;		// количество отправленных фреймов
-// 	/* возможно стоит предусмотреть увеличение счетчиков байт данных т.к. может переполниться за 8 часов */
-// 	__u32 rx_bytes;			// количество принятых байт данных
-// 	__u32 tx_bytes;			// количество отправленных байт данных
-
-// 	__u32 int_wak;			// количество прерываний пробуждения
-// 	__u32 int_state;		// количество прерываний проверки состояния
-// 	__u32 int_rx_frame;		// количество прерываний чтения фреймов
-// 	__u32 int_tx_frame;		// количество прерываний отправки фреймов
-// 	__u32 int_num;			// количество прерываний
-
-// 	__u32 err_tx;			// количество ошибок отправки фреймов
-// 	__u32 err_rx;			// количество ошибок принятия фреймов
-// 	__u32 err_over;			// количество переполнений буффера
-// 	__u32 err_warn;			// количество заполнений буффера
-// 	__u32 err_frame;		// количество ошибочных фреймов
-// 	__u32 err_drop;			// количество потерянных при чтении фреймов
-// 	__u32 err_length;		// количество ошибок длины фреймов
-// 	__u32 err_fifo;			// количество ошибок fifo буффера
-
-// 	__u32 reg_esr;			// состояние регистра esr
-// 	__u32 reg_mcr;			// состояние регистра mcr
-// 	__u32 reg_ctrl;			// состояние регистра ctrl
-
-// 	__u32 freq;				// частота модуля
-
-// 	__u32 ctrlmode;
-// 	__u32 ctrlmode_supported;
-
-// 	struct can_device_stats dev_stats;
-
-// 	enum can_state state;
-// 	struct can_bittiming_const *bittiming_const;
-// };
 
 #define FLEXCAN_IOC_MAGIC			0x81
 //Отныне и навсегда за сим местом лежат новые команды для IOCTL запросов к драйверу flexcan. Да будет так.

@@ -155,6 +155,7 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 	MX6Q_PAD_CSI0_DAT19__GPIO_6_5,		/* GPRS_INP */
 	MX6Q_PAD_CSI0_MCLK__GPIO_5_19,		/* GPRS_DCD */
         MX6Q_PAD_KEY_ROW1__GPIO_4_9,            /* GPRS_STATUS */
+        MX6Q_PAD_EIM_D28__GPIO_3_28,            /* LED D25 on board */
 
 	/* CCM  */
 	MX6Q_PAD_GPIO_0__CCM_CLKO,		/* SGTL500 sys_mclk */
