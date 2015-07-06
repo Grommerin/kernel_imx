@@ -351,7 +351,7 @@ struct flexcan_device	{
 
 static struct flexcan_device fimx6d;
 
-//static void pp(char *p,...){}
+static void pp(char *p,...){}
 static void (*my_debug)(char *p,...) = pp;
 //static void (*my_debug)(char *p,...) = printk;
 
@@ -1038,10 +1038,10 @@ static ssize_t flexcan_proc_read(struct file *file, char *buf, size_t count, lof
 	int buf_length = 0;
 	char *buf_msg = get_rw_buf(dev_num, &buf_length);
 	int res;
-	1my_debug("%s.%d: %s count = %d, buf_length = %d, *ppos = %d\n", fimx6d.name, dev_num, __func__, count, buf_length, (int) *ppos);
+	my_debug("%s.%d: %s count = %d, buf_length = %d, *ppos = %d\n", fimx6d.name, dev_num, __func__, count, buf_length, (int) *ppos);
 
 	if(*ppos >= buf_length) 	{
-		1my_debug("%s.%d: %s End of File\n", fimx6d.name, dev_num, __func__);
+		my_debug("%s.%d: %s End of File\n", fimx6d.name, dev_num, __func__);
 		return 0;
 	}
 
@@ -1063,14 +1063,14 @@ static int flexcan_proc_dir_init(void)
 	fimx6d.dev_proc_dir = create_proc_entry(NAME_DIR, S_IFDIR | S_IRWXUGO, NULL);
 	if(NULL == fimx6d.dev_proc_dir) {
 		ret = -ENOENT;
-		1my_debug("%s: %s can't create directory /proc/%s\n", fimx6d.name, __func__, NAME_DIR);
+		my_debug("%s: %s can't create directory /proc/%s\n", fimx6d.name, __func__, NAME_DIR);
 		goto err_dir;
 	}
 
 	fimx6d.dev_proc_dir->uid = 0;
 	fimx6d.dev_proc_dir->gid = 0;
 
-	1my_debug("%s: %s /proc/%s installed\n", fimx6d.name, __func__, NAME_DIR);
+	my_debug("%s: %s /proc/%s installed\n", fimx6d.name, __func__, NAME_DIR);
 
 	return 0;
 
@@ -1085,7 +1085,7 @@ static int flexcan_proc_file_init(u8 dev_num)
 	fimx6d.f_dev[dev_num].dev_proc_file = create_proc_entry(fimx6d.f_dev[dev_num].name, S_IFREG | S_IRUGO, fimx6d.dev_proc_dir);
 	if(NULL == fimx6d.f_dev[dev_num].dev_proc_file) {
 		ret = -ENOENT;
-		1my_debug("%s.%d: %s can't create node /proc/%s/%s\n", fimx6d.name, dev_num, __func__, NAME_DIR, fimx6d.f_dev[dev_num].name);
+		my_debug("%s.%d: %s can't create node /proc/%s/%s\n", fimx6d.name, dev_num, __func__, NAME_DIR, fimx6d.f_dev[dev_num].name);
 		goto err_file;
 	}
 
