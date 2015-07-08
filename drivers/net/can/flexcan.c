@@ -173,7 +173,7 @@
 #define DEV_FIRST  					(0) 
 #define DEV_COUNT  					(2) 
 
-#define BUF_RECV_CAP				(65536)
+#define BUF_RECV_CAP				(262144)
 #define BUF_SEND_CAP				(64)
 
 #define BUF_RECV_MASK				(fimx6d.f_dev[dev_num].buf_recv_size - 1)

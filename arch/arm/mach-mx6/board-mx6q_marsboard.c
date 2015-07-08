@@ -85,14 +85,8 @@
 #define MX6Q_MARSBOARD_CAP_TCH_INT1	IMX_GPIO_NR(1, 9)
 #define MX6Q_MARSBOARD_RES_TCH_INT      IMX_GPIO_NR(2, 21)
 #define MX6Q_MARSBOARD_USB_HUB_RESET	IMX_GPIO_NR(7, 12)
-//#define MX6Q_MARSBOARD_CAN1_STBY	IMX_GPIO_NR(1, 2)
 #define MX6Q_MARSBOARD_CAN1_EN		IMX_GPIO_NR(1, 4)
-//#define MX6Q_MARSBOARD_CAN1_STBY	IMX_GPIO_NR(7, 4)
-//#define MX6Q_MARSBOARD_CAN1_GPIO	IMX_GPIO_NR(1, 1)
-//#define MX6Q_MARSBOARD_CAN2_STBY	IMX_GPIO_NR(1, 3)
 #define MX6Q_MARSBOARD_CAN2_EN		IMX_GPIO_NR(1, 5)
-//#define MX6Q_MARSBOARD_CAN2_STBY	IMX_GPIO_NR(1, 5)
-//#define MX6Q_MARSBOARD_CAN2_GPIO	IMX_GPIO_NR(1, 3)
 #define MX6Q_MARSBOARD_MENU_KEY		IMX_GPIO_NR(2, 1)
 #define MX6Q_MARSBOARD_BACK_KEY		IMX_GPIO_NR(2, 2)
 #define MX6Q_MARSBOARD_ONOFF_KEY	IMX_GPIO_NR(2, 3)
@@ -156,6 +150,7 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 	MX6Q_PAD_CSI0_MCLK__GPIO_5_19,		/* GPRS_DCD */
         MX6Q_PAD_KEY_ROW1__GPIO_4_9,            /* GPRS_STATUS */
         MX6Q_PAD_EIM_D28__GPIO_3_28,            /* LED D25 on board */
+        MX6Q_PAD_KEY_COL1__GPIO_4_8,            /* Comparator */     
 
 	/* CCM  */
 	MX6Q_PAD_GPIO_0__CCM_CLKO,		/* SGTL500 sys_mclk */
@@ -508,8 +503,8 @@ static const struct anatop_thermal_platform_data
 
 static inline void mx6q_marsboard_init_uart(void)
 {
-	//imx6q_add_imx_uart(0, NULL);
-	imx6q_add_imx_uart(1, NULL);
+	imx6q_add_imx_uart(0, NULL);
+	//imx6q_add_imx_uart(1, NULL);
 	imx6q_add_imx_uart(2, NULL);
 	imx6q_add_imx_uart(3, NULL);
    	imx6q_add_imx_uart(4, NULL);
@@ -1448,7 +1443,7 @@ static void __init mx6_marsboard_board_init(void)
 }
 
 extern void __iomem *twd_base;
-static void __init mx6_marsboard_timer_init(void)
+static void __init mx6_marsboard_timer_init(void)F
 {
 	struct clk *uart_clk;
 #ifdef CONFIG_LOCAL_TIMERS
