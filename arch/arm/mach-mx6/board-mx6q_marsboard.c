@@ -1443,7 +1443,7 @@ static void __init mx6_marsboard_board_init(void)
 }
 
 extern void __iomem *twd_base;
-static void __init mx6_marsboard_timer_init(void)F
+static void __init mx6_marsboard_timer_init(void)
 {
 	struct clk *uart_clk;
 #ifdef CONFIG_LOCAL_TIMERS
