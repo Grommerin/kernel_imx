@@ -310,8 +310,8 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 	/* UART1  */
 //	MX6Q_PAD_SD3_DAT7__UART1_TXD,
 //	MX6Q_PAD_SD3_DAT6__UART1_RXD,
-//      MX6Q_PAD_CSI0_DAT10__UART1_TXD,
-//      MX6Q_PAD_CSI0_DAT11__UART1_RXD,
+        MX6Q_PAD_CSI0_DAT10__UART1_TXD,
+        MX6Q_PAD_CSI0_DAT11__UART1_RXD,
 //	MX6Q_PAD_EIM_D19__UART1_CTS,
 //	MX6Q_PAD_EIM_D20__UART1_RTS,
 
@@ -504,7 +504,7 @@ static const struct anatop_thermal_platform_data
 static inline void mx6q_marsboard_init_uart(void)
 {
 	imx6q_add_imx_uart(0, NULL);
-	//imx6q_add_imx_uart(1, NULL);
+	imx6q_add_imx_uart(1, NULL);
 	imx6q_add_imx_uart(2, NULL);
 	imx6q_add_imx_uart(3, NULL);
    	imx6q_add_imx_uart(4, NULL);
