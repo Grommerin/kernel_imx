@@ -142,12 +142,9 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 	/* My GPIO */
 	MX6Q_PAD_SD1_CMD__GPIO_1_18,		/* GPS_RST# */
 	MX6Q_PAD_GPIO_1__GPIO_1_1,		/* GPS_SB# */
-	MX6Q_PAD_EIM_EB3__GPIO_2_31,		/* GPS_WKUP */
-        MX6Q_PAD_GPIO_0__GPIO_1_0,              /* GPS_STATUS */
-	MX6Q_PAD_GPIO_3__GPIO_1_3,		
-        MX6Q_PAD_EIM_D23__GPIO_3_23,
+	MX6Q_PAD_EIM_EB3__GPIO_2_31,		/* GPS_WKUP */	
         MX6Q_PAD_EIM_D19__GPIO_3_19,
-        MX6Q_PAD_EIM_D20__GPIO_3_20,
+        MX6Q_PAD_EIM_D20__GPIO_3_20,            /* GPS_STATUS */
 	MX6Q_PAD_SD4_DAT3__GPIO_2_11,		/* GPRS_PWR */
 	MX6Q_PAD_CSI0_DAT18__GPIO_6_4,		/* GPRS_WKUP */
 	MX6Q_PAD_CSI0_DAT19__GPIO_6_5,		/* GPRS_INP */
@@ -157,8 +154,8 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
         MX6Q_PAD_KEY_COL1__GPIO_4_8,            /* Comparator */     
 
 	/* CCM  */
-//	MX6Q_PAD_GPIO_0__CCM_CLKO,		/* SGTL500 sys_mclk */
-//	MX6Q_PAD_GPIO_3__CCM_CLKO2,		/* J5 - Camera MCLK */
+	MX6Q_PAD_GPIO_0__CCM_CLKO,		/* SGTL500 sys_mclk */
+	MX6Q_PAD_GPIO_3__CCM_CLKO2,		/* J5 - Camera MCLK */
 
 	/* ECSPI1 */
 	MX6Q_PAD_EIM_D17__ECSPI1_MISO,
@@ -190,7 +187,7 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 	MX6Q_PAD_RGMII_RD3__ENET_RGMII_RD3,
 	MX6Q_PAD_RGMII_RX_CTL__ENET_RGMII_RX_CTL,
 	MX6Q_PAD_ENET_TX_EN__GPIO_1_28,		/* Micrel RGMII Phy Interrupt */
-//	MX6Q_PAD_EIM_D23__GPIO_3_23,		/* RGMII reset */
+	MX6Q_PAD_EIM_D23__GPIO_3_23,		/* RGMII reset */
 
 	/* GPIO1 */
 //	MX6Q_PAD_ENET_RX_ER__GPIO_1_24,		/* J9 - Microphone Detect */
