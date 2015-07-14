@@ -143,7 +143,8 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 	MX6Q_PAD_SD1_CMD__GPIO_1_18,		/* GPS_RST# */
 	MX6Q_PAD_GPIO_1__GPIO_1_1,		/* GPS_SB# */
 	MX6Q_PAD_EIM_EB3__GPIO_2_31,		/* GPS_WKUP */
-//	MX6Q_PAD_GPIO_3__GPIO_1_3,		
+        MX6Q_PAD_GPIO_0__GPIO_1_0,
+	MX6Q_PAD_GPIO_3__GPIO_1_3,		
 	MX6Q_PAD_SD4_DAT3__GPIO_2_11,		/* GPRS_PWR */
 	MX6Q_PAD_CSI0_DAT18__GPIO_6_4,		/* GPRS_WKUP */
 	MX6Q_PAD_CSI0_DAT19__GPIO_6_5,		/* GPRS_INP */
@@ -153,8 +154,8 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
         MX6Q_PAD_KEY_COL1__GPIO_4_8,            /* Comparator */     
 
 	/* CCM  */
-	MX6Q_PAD_GPIO_0__CCM_CLKO,		/* SGTL500 sys_mclk */
-	MX6Q_PAD_GPIO_3__CCM_CLKO2,		/* J5 - Camera MCLK */
+//	MX6Q_PAD_GPIO_0__CCM_CLKO,		/* SGTL500 sys_mclk */
+//	MX6Q_PAD_GPIO_3__CCM_CLKO2,		/* J5 - Camera MCLK */
 
 	/* ECSPI1 */
 	MX6Q_PAD_EIM_D17__ECSPI1_MISO,
