@@ -642,9 +642,9 @@ static ssize_t flexcan_char_read(struct file *file, char __user *buf, size_t len
 			// 	data_msg_length += 1;
 			// }
 
-			cp_ret = sprintf(data_msg_ptr, "&%d,%d,%#08x,%d,0x%*x\n", send_frame.time.tv_sec, send_frame.time.tv_usec, 
-				send_frame.cf.can_id, send_frame.cf.can_dlc, send_frame.cf.data[0], send_frame.cf.can_dlc);
-				data_msg_length = (35 + send_frame.cf.can_dlc);
+			cp_ret = sprintf(data_msg_ptr, "&%10d,%06d,%08x,%d,%#016x\n", send_frame.time.tv_sec, send_frame.time.tv_usec, 
+				send_frame.cf.can_id, send_frame.cf.can_dlc, send_frame.cf.data[0]);
+				data_msg_length = 51;
 /* новое */
 
 /*			dev_dbg("%s.%d: %s copy_to_user %#08x.%#08x %#08x %#02x [0x%02x%02x%02x%02x,0x%02x%02x%02x%02x]\n", fimx6d.name, dev_num, __func__, 
