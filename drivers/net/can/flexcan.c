@@ -58,7 +58,7 @@
 #endif
 
 #define DRV_NAME		"flexcan"
-#define DRV_VER			"1.2.25" 
+#define DRV_VER			"1.2.30" 
 
 /* 6 for RX fifo and 2 error handling */
 #define FLEXCAN_NAPI_WEIGHT				(6 + 1)
@@ -542,8 +542,8 @@ static void flexcan_decode_frame(struct can_frame *cf, const struct flexcan_mb *
 		*(__be32 *)(cf->data + 4) = cpu_to_be32(readl(&mb->data[1]));
 	}
 }
-// #1415234657,675456,0x0000F00F,8,0x0102030405060708
-#define LEN_DATA_MSG (1 + 10 + 1 + 6 + 1 + 10 + 1 + 1 + 1 + 18)
+// #1415234657,675456,0x0000F00F,8,0x0102030405060708\n
+#define LEN_DATA_MSG (1 + 10 + 1 + 6 + 1 + 10 + 1 + 1 + 1 + 18 + 1)
 
 static ssize_t flexcan_char_read(struct file *file, char __user *buf, size_t length_read, loff_t *off)
 {
@@ -620,17 +620,18 @@ static ssize_t flexcan_char_read(struct file *file, char __user *buf, size_t len
 			memcpy(data_msg_ptr, &data_msg_hex, sizeof(data_msg_hex));
 			data_msg_ptr += sizeof(data_msg_hex);
 			data_msg_length += sizeof(data_msg_hex);
-			memcpy(data_msg_ptr, &send_frame.cf.data, send_frame.cf.can_dlc);
-			data_msg_ptr += send_frame.cf.can_dlc;
-			data_msg_length += send_frame.cf.can_dlc;
-
-			/*			
+			// memcpy(data_msg_ptr, &send_frame.cf.data, send_frame.cf.can_dlc);
+			// data_msg_ptr += send_frame.cf.can_dlc;
+			// data_msg_length += send_frame.cf.can_dlc;
+	
 			for(j = 0; j < (int) send_frame.cf.can_dlc; j++) {
 				sprintf(data_msg_ptr, "%02x", send_frame.cf.data[j]);
-				data_msg_ptr += 1;
-				data_msg_length += 1;
+				data_msg_ptr += 2;
+				data_msg_length += 2;
 			}
-			*/
+			sprintf(data_msg_ptr, "\n");
+			data_msg_ptr += 1;
+			data_msg_length += 1;
 /* новое */
 
 /*			dev_dbg("%s.%d: %s copy_to_user %#08x.%#08x %#08x %#02x [0x%02x%02x%02x%02x,0x%02x%02x%02x%02x]\n", fimx6d.name, dev_num, __func__, 
