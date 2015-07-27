@@ -564,6 +564,7 @@ static ssize_t flexcan_char_read(struct file *file, char __user *buf, size_t len
 	static char data_msg_buf[LEN_DATA_MSG + 1];
 	char *data_msg_ptr = data_msg_buf;
 	int data_msg_length = 0;
+	int data_msg_length_total = 0;
 
 	/* Проверяем размер буффера пользователя */
 	if(length < sizeof(struct flexcan_frame_cf))	{
@@ -590,48 +591,60 @@ static ssize_t flexcan_char_read(struct file *file, char __user *buf, size_t len
 			flexcan_decode_frame(&send_frame.cf, &read_frame.mb);
 
 /* новое */
-			memcpy(data_msg_ptr, &data_msg_front, sizeof(data_msg_front));
-			data_msg_ptr += sizeof(data_msg_front);
-			data_msg_length += sizeof(data_msg_front);
-			sprintf(data_msg_ptr, "%d", (int) send_frame.time.tv_sec);
-			data_msg_ptr += 10;
-			data_msg_length += 10;
-			memcpy(data_msg_ptr, &data_msg_sep, sizeof(data_msg_sep));
-			data_msg_ptr += sizeof(data_msg_sep);
-			data_msg_length += sizeof(data_msg_sep);	
-			sprintf(data_msg_ptr, "%d", (int) send_frame.time.tv_usec);
-			data_msg_ptr += 6;
-			data_msg_length += 6;
-			memcpy(data_msg_ptr, &data_msg_sep, sizeof(data_msg_sep));
-			data_msg_ptr += sizeof(data_msg_sep);
-			data_msg_length += sizeof(data_msg_sep);	
-			sprintf(data_msg_ptr, "%#08x", send_frame.cf.can_id);
-			data_msg_ptr += 10;
-			data_msg_length += 10;
-			memcpy(data_msg_ptr, &data_msg_sep, sizeof(data_msg_sep));
-			data_msg_ptr += sizeof(data_msg_sep);
-			data_msg_length += sizeof(data_msg_sep);	
-			sprintf(data_msg_ptr, "%d", (int) send_frame.cf.can_dlc);
-			data_msg_ptr += 1;
-			data_msg_length += 1;
-			memcpy(data_msg_ptr, &data_msg_sep, sizeof(data_msg_sep));
-			data_msg_ptr += sizeof(data_msg_sep);
-			data_msg_length += sizeof(data_msg_sep);
-			memcpy(data_msg_ptr, &data_msg_hex, sizeof(data_msg_hex));
-			data_msg_ptr += sizeof(data_msg_hex);
-			data_msg_length += sizeof(data_msg_hex);
-			// memcpy(data_msg_ptr, &send_frame.cf.data, send_frame.cf.can_dlc);
-			// data_msg_ptr += send_frame.cf.can_dlc;
-			// data_msg_length += send_frame.cf.can_dlc;
-	
-			for(j = 0; j < (int) send_frame.cf.can_dlc; j++) {
-				sprintf(data_msg_ptr, "%02x", send_frame.cf.data[j]);
-				data_msg_ptr += 2;
-				data_msg_length += 2;
-			}
-			sprintf(data_msg_ptr, "\n");
-			data_msg_ptr += 1;
-			data_msg_length += 1;
+			// data_msg_length = 0;
+			// memcpy(data_msg_ptr, &data_msg_front, sizeof(data_msg_front));
+			// data_msg_ptr += sizeof(data_msg_front);
+			// data_msg_length += sizeof(data_msg_front);
+			// sprintf(data_msg_ptr, "%d", (int) send_frame.time.tv_sec);
+			// data_msg_ptr += 10;
+			// data_msg_length += 10;
+			// memcpy(data_msg_ptr, &data_msg_sep, sizeof(data_msg_sep));
+			// data_msg_ptr += sizeof(data_msg_sep);
+			// data_msg_length += sizeof(data_msg_sep);	
+			// sprintf(data_msg_ptr, "%d", (int) send_frame.time.tv_usec);
+			// data_msg_ptr += 6;
+			// data_msg_length += 6;
+			// memcpy(data_msg_ptr, &data_msg_sep, sizeof(data_msg_sep));
+			// data_msg_ptr += sizeof(data_msg_sep);
+			// data_msg_length += sizeof(data_msg_sep);	
+			// sprintf(data_msg_ptr, "%#08x", send_frame.cf.can_id);
+			// data_msg_ptr += 10;
+			// data_msg_length += 10;
+			// memcpy(data_msg_ptr, &data_msg_sep, sizeof(data_msg_sep));
+			// data_msg_ptr += sizeof(data_msg_sep);
+			// data_msg_length += sizeof(data_msg_sep);	
+			// if(send_frame.cf.can_dlc == 0) {
+			// 	sprintf(data_msg_ptr, "0,\n");
+			// 	data_msg_ptr += 3;
+			// 	data_msg_length += 3;
+			// }
+			// else {
+			// 	sprintf(data_msg_ptr, "%d", (int) send_frame.cf.can_dlc);
+			// 	data_msg_ptr += 1;
+			// 	data_msg_length += 1;
+			// 	memcpy(data_msg_ptr, &data_msg_sep, sizeof(data_msg_sep));
+			// 	data_msg_ptr += sizeof(data_msg_sep);
+			// 	data_msg_length += sizeof(data_msg_sep);
+			// 	memcpy(data_msg_ptr, &data_msg_hex, sizeof(data_msg_hex));
+			// 	data_msg_ptr += sizeof(data_msg_hex);
+			// 	data_msg_length += sizeof(data_msg_hex);
+			// 	// memcpy(data_msg_ptr, &send_frame.cf.data, send_frame.cf.can_dlc);
+			// 	// data_msg_ptr += send_frame.cf.can_dlc;
+			// 	// data_msg_length += send_frame.cf.can_dlc;
+		
+			// 	for(j = 0; j < (int) send_frame.cf.can_dlc; j++) {
+			// 		sprintf(data_msg_ptr, "%02x", send_frame.cf.data[j]);
+			// 		data_msg_ptr += 2;
+			// 		data_msg_length += 2;
+			// 	}
+			// 	sprintf(data_msg_ptr, "\n");
+			// 	data_msg_ptr += 1;
+			// 	data_msg_length += 1;
+			// }
+
+			cp_ret = sprintf(data_msg_ptr, "&%d,%d,%#08x,%d,0x%*x\n", send_frame.time.tv_sec, send_frame.time.tv_usec, 
+				send_frame.cf.can_id, send_frame.cf.can_dlc, send_frame.cf.data[0], send_frame.cf.can_dlc);
+				data_msg_length = (35 + send_frame.cf.can_dlc);
 /* новое */
 
 /*			dev_dbg("%s.%d: %s copy_to_user %#08x.%#08x %#08x %#02x [0x%02x%02x%02x%02x,0x%02x%02x%02x%02x]\n", fimx6d.name, dev_num, __func__, 
@@ -645,11 +658,13 @@ static ssize_t flexcan_char_read(struct file *file, char __user *buf, size_t len
 			}
 			else 	{
 				dev_dbg("%s.%d: %s user_buf_ptr = %#08x\n", fimx6d.name, (int) dev_num, __func__, (int) user_buf_ptr);
+				data_msg_length_total += data_msg_length;
 			}
 		}
 	}
 
-	return (i * sizeof(struct flexcan_frame_cf));
+	// return (i * sizeof(struct flexcan_frame_cf));
+	return data_msg_length_total;
 }
 
 //IOCTL Func ------------------------------------------------------------------------------------------------------------------------------------
