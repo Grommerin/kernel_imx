@@ -107,10 +107,14 @@
 #define MX6Q_MARSBOARD_GPS_RST		IMX_GPIO_NR(1, 18)
 #define MX6Q_MARSBOARD_GPS_SB		IMX_GPIO_NR(1, 1)
 #define MX6Q_MARSBOARD_GPS_WKUP		IMX_GPIO_NR(2, 31)
+#define MX6Q_MARSBOARD_GPS_PSS		IMX_GPIO_NR(3, 19)
+#define MX6Q_MARSBOARD_GPS_STATUS	IMX_GPIO_NR(3, 20)
 #define MX6Q_MARSBOARD_GPRS_PWR		IMX_GPIO_NR(2, 11)
+#define MX6Q_MARSBOARD_GPRS_STATUS	IMX_GPIO_NR(4, 9)
+#define MX6Q_MARSBOARD_GPRS_NETLIGHT	IMX_GPIO_NR(5, 19)
 #define MX6Q_MARSBOARD_GPRS_WKUP	IMX_GPIO_NR(6, 4)
 #define MX6Q_MARSBOARD_GPRS_INP		IMX_GPIO_NR(6, 5)
-#define MX6Q_MARSBOARD_GPRS_DCD		IMX_GPIO_NR(5, 19)
+#define MX6Q_MARSBOARD_MARS_STATUS	IMX_GPIO_NR(1, 26)
 
 
 void __init early_console_setup(unsigned long base, struct clk *clk);
@@ -143,15 +147,16 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 	MX6Q_PAD_SD1_CMD__GPIO_1_18,		/* GPS_RST# */
 	MX6Q_PAD_GPIO_1__GPIO_1_1,		/* GPS_SB# */
 	MX6Q_PAD_EIM_EB3__GPIO_2_31,		/* GPS_WKUP */	
-        MX6Q_PAD_EIM_D19__GPIO_3_19,
+        MX6Q_PAD_EIM_D19__GPIO_3_19,            /* GPS_PSS */                   
         MX6Q_PAD_EIM_D20__GPIO_3_20,            /* GPS_STATUS */
 	MX6Q_PAD_SD4_DAT3__GPIO_2_11,		/* GPRS_PWR */
 	MX6Q_PAD_CSI0_DAT18__GPIO_6_4,		/* GPRS_WKUP */
 	MX6Q_PAD_CSI0_DAT19__GPIO_6_5,		/* GPRS_INP */
-	MX6Q_PAD_CSI0_MCLK__GPIO_5_19,		/* GPRS_DCD */
+	MX6Q_PAD_CSI0_MCLK__GPIO_5_19,		/* GPRS_NETLIGHT */
         MX6Q_PAD_KEY_ROW1__GPIO_4_9,            /* GPRS_STATUS */
         MX6Q_PAD_EIM_D28__GPIO_3_28,            /* LED D25 on board */
         MX6Q_PAD_KEY_COL1__GPIO_4_8,            /* Comparator */     
+        MX6Q_PAD_ENET_RXD1__GPIO_1_26,          /* MarsBoard Normal Boot LED out */
 
 	/* CCM  */
 	MX6Q_PAD_GPIO_0__CCM_CLKO,		/* SGTL500 sys_mclk */

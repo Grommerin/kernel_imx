@@ -7,6 +7,7 @@
 #include <linux/can/netlink.h>
 #include <linux/can/error.h>
 
+#define SET_DRIVER_CLEAR			(0)				/* For init setting variable */
 #define SET_DRIVER_DEBUG_MASK		0x000000f0 		/* For check set debug in message */
 #define SET_DRIVER_DEBUG_ON			(0xC << 4)		/* Turn on debug messages in griver */
 #define SET_DRIVER_DEBUG_OFF		(0x0 << 4)		/* Turn off debug messages in griver */
