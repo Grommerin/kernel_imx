@@ -929,8 +929,9 @@ static int set_machine_constraints(struct regulator_dev *rdev,
 			goto out;
 		}
 	}
-
+/* MY INSERT
 	print_constraints(rdev);
+*/
 out:
 	return ret;
 }
