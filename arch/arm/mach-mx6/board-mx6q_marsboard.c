@@ -510,10 +510,10 @@ static const struct anatop_thermal_platform_data
 static inline void mx6q_marsboard_init_uart(void)
 {
 	imx6q_add_imx_uart(0, NULL);
-//	imx6q_add_imx_uart(1, NULL);
+	imx6q_add_imx_uart(1, NULL);
 	imx6q_add_imx_uart(2, NULL);
 	imx6q_add_imx_uart(3, NULL);
-   	imx6q_add_imx_uart(4, NULL);
+//   	imx6q_add_imx_uart(4, NULL);
 }
 
 static int mx6q_marsboard_fec_phy_init(struct phy_device *phydev)
@@ -1342,7 +1342,7 @@ static void __init mx6_marsboard_board_init(void)
 
 	gp_reg_id = marsboard_dvfscore_data.reg_id;
 	mx6q_marsboard_init_uart();
-	imx6q_add_mxc_hdmi_core(&hdmi_core_data);
+//	imx6q_add_mxc_hdmi_core(&hdmi_core_data);
 
 	imx6q_add_ipuv3(0, &ipu_data[0]);
 	imx6q_add_ipuv3(1, &ipu_data[1]);
@@ -1355,11 +1355,12 @@ static void __init mx6_marsboard_board_init(void)
 	imx6q_add_ldb(&ldb_data);
 	imx6q_add_v4l2_output(0);
 	imx6q_add_v4l2_capture(0);
-	imx6q_add_mipi_csi2(&mipi_csi2_pdata);
+//	imx6q_add_mipi_csi2(&mipi_csi2_pdata);
 	imx6q_add_imx_snvs_rtc();
 
 	ldb_init();
 
+/*
 	imx6q_add_imx_i2c(0, &mx6q_marsboard_i2c_data);
 	imx6q_add_imx_i2c(1, &mx6q_marsboard_i2c_data);
 	imx6q_add_imx_i2c(2, &mx6q_marsboard_i2c_data);
@@ -1369,6 +1370,7 @@ static void __init mx6_marsboard_board_init(void)
 			ARRAY_SIZE(mxc_i2c1_board_info));
 	i2c_register_board_info(2, mxc_i2c2_board_info,
 			ARRAY_SIZE(mxc_i2c2_board_info));
+*/
 
 	/* SPI */
 	imx6q_add_ecspi(0, &mx6q_marsboard_spi0_data);
@@ -1376,7 +1378,7 @@ static void __init mx6_marsboard_board_init(void)
 	spi_register_board_info(imx6_marsboard_spi_devices,
                                 ARRAY_SIZE(imx6_marsboard_spi_devices));
 
-	imx6q_add_mxc_hdmi(&hdmi_data);
+//	imx6q_add_mxc_hdmi(&hdmi_data);
 
 	imx6q_add_anatop_thermal_imx(1, &mx6q_marsboard_anatop_thermal_data);
 	imx6_init_fec(fec_data);
@@ -1387,23 +1389,23 @@ static void __init mx6_marsboard_board_init(void)
 	imx6q_add_sdhci_usdhc_imx(2, &mx6q_marsboard_sd3_data);
 	imx6q_add_sdhci_usdhc_imx(1, &mx6q_marsboard_sd2_data);
 	imx_add_viv_gpu(&imx6_gpu_data, &imx6q_gpu_pdata);
-	imx6q_marsboard_init_usb();
+//	imx6q_marsboard_init_usb();
 	imx6q_add_ahci(0, &mx6q_marsboard_sata_data);
 	imx6q_add_vpu();
-	imx6q_init_audio();
+//	imx6q_init_audio();
 	platform_device_register(&marsboard_vmmc_reg_devices);
 	imx_asrc_data.asrc_core_clk = clk_get(NULL, "asrc_clk");
 	imx_asrc_data.asrc_audio_clk = clk_get(NULL, "asrc_serial_clk");
 	imx6q_add_asrc(&imx_asrc_data);
 
 	/* release USB Hub reset */
-	gpio_set_value(MX6Q_MARSBOARD_USB_HUB_RESET, 1);
+//	gpio_set_value(MX6Q_MARSBOARD_USB_HUB_RESET, 1);
 
 	imx6q_add_mxc_pwm(0);
 	imx6q_add_mxc_pwm(1);
 	imx6q_add_mxc_pwm(2);
 	imx6q_add_mxc_pwm(3);
-	imx6q_add_mxc_pwm_backlight(2, &mx6_marsboard_lcd_backlight_data);
+//	imx6q_add_mxc_pwm_backlight(2, &mx6_marsboard_lcd_backlight_data);
 	imx6q_add_mxc_pwm_backlight(3, &mx6_marsboard_ldb_backlight_data);
 
 	imx6q_add_otp();
@@ -1420,8 +1422,8 @@ static void __init mx6_marsboard_board_init(void)
 //	marsboard_add_device_buttons();
 	marsboard_add_device_leds();
 
-	imx6q_add_hdmi_soc();
-	imx6q_add_hdmi_soc_dai();
+//	imx6q_add_hdmi_soc();
+//	imx6q_add_hdmi_soc_dai();
 
 
 	ret = gpio_request_array(mx6q_marsboard_flexcan_gpios,
@@ -1459,7 +1461,7 @@ static void __init mx6_marsboard_timer_init(void)
 	mx6_clocks_init(32768, 24000000, 0, 0);
 
 	uart_clk = clk_get_sys("imx-uart.4", NULL);
-	early_console_setup(UART2_BASE_ADDR, uart_clk);
+	early_console_setup(UART5_BASE_ADDR, uart_clk);
 }
 
 static struct sys_timer mx6_marsboard_timer = {
@@ -1500,7 +1502,8 @@ static void __init mx6q_marsboard_reserve(void)
 /*
  * initialize __mach_desc_MX6Q_MARSBOARD data structure.
  */
-MACHINE_START(MX6Q_MARSBOARD, "Freescale i.MX 6Quad Mars Board")
+//MACHINE_START(MX6Q_MARSBOARD, "Freescale i.MX 6Quad Mars Board")
+MACHINE_START(MX6Q_MARSBOARD, "Remote Monitor by Strim-Tech")
 	.boot_params = MX6_PHYS_OFFSET + 0x100,
 	.fixup = fixup_mxc_board,
 	.map_io = mx6_map_io,
