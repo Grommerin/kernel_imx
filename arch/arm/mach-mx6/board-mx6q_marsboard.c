@@ -510,7 +510,7 @@ static const struct anatop_thermal_platform_data
 static inline void mx6q_marsboard_init_uart(void)
 {
 	imx6q_add_imx_uart(0, NULL);
-	imx6q_add_imx_uart(1, NULL);
+//	imx6q_add_imx_uart(1, NULL);
 	imx6q_add_imx_uart(2, NULL);
 	imx6q_add_imx_uart(3, NULL);
    	imx6q_add_imx_uart(4, NULL);
