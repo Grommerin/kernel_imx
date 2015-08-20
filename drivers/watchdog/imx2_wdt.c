@@ -38,7 +38,7 @@
 #define DRIVER_NAME "imx2-wdt"
 
 #define IMX2_WDT_WCR		0x00		/* Control Register */
-#define IMX2_WDT_WCR_WT		(0xFF << 8)	/* -> Watchdog Timeout Field */
+#define IMX2_WDT_WCR_WT		(0x13 << 8)	/* -> Watchdog Timeout Field */
 #define IMX2_WDT_WCR_WRE	(1 << 3)	/* -> WDOG Reset Enable */
 #define IMX2_WDT_WCR_WDE	(1 << 2)	/* -> Watchdog Enable */
 #define IMX2_WDT_WCR_WDZST	(1 << 0)	/* -> Watchdog timer Suspend */
@@ -48,7 +48,7 @@
 #define IMX2_WDT_SEQ2		0xAAAA		/* -> service sequence 2 */
 
 #define IMX2_WDT_MAX_TIME	128
-#define IMX2_WDT_DEFAULT_TIME	60		/* in seconds */
+#define IMX2_WDT_DEFAULT_TIME	9		/* in seconds */
 
 #define WDOG_SEC_TO_COUNT(s)	((s * 2 - 1) << 8)
 
@@ -106,6 +106,7 @@ static inline void imx2_wdt_setup(void)
 
 static inline void imx2_wdt_ping(void)
 {
+        printk("MY INSERT: imx2_wdt_ping()\n");
 	__raw_writew(IMX2_WDT_SEQ1, imx2_wdt.base + IMX2_WDT_WSR);
 	__raw_writew(IMX2_WDT_SEQ2, imx2_wdt.base + IMX2_WDT_WSR);
 }
@@ -159,6 +160,7 @@ static int imx2_wdt_open(struct inode *inode, struct file *file)
 
 static int imx2_wdt_close(struct inode *inode, struct file *file)
 {
+/* MY INSERT
 	if (test_bit(IMX2_WDT_EXPECT_CLOSE, &imx2_wdt.status) && !nowayout)
 		imx2_wdt_stop();
 	else {
@@ -166,6 +168,9 @@ static int imx2_wdt_close(struct inode *inode, struct file *file)
 			"Unexpected close: Expect reboot!\n");
 		imx2_wdt_ping();
 	}
+*/
+        mod_timer(&imx2_wdt.timer, jiffies + imx2_wdt.timeout * HZ / 2);
+
 
 	clear_bit(IMX2_WDT_EXPECT_CLOSE, &imx2_wdt.status);
 	clear_bit(IMX2_WDT_STATUS_OPEN, &imx2_wdt.status);
