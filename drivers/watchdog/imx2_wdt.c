@@ -57,7 +57,7 @@
 #define IMX2_WDT_STATUS_STARTED	1
 #define IMX2_WDT_EXPECT_CLOSE	2
 
-//#define MY_INSERT_AUTORESET
+#define MY_INSERT_AUTORESET
 
 static struct {
 	struct clk *clk;
