@@ -38,7 +38,7 @@
 #define DRIVER_NAME "imx2-wdt"
 
 #define IMX2_WDT_WCR		0x00		/* Control Register */
-#define IMX2_WDT_WCR_WT		(0x13 << 8)	/* -> Watchdog Timeout Field */
+#define IMX2_WDT_WCR_WT		(0x01 << 8)	/* -> Watchdog Timeout Field */
 #define IMX2_WDT_WCR_WRE	(1 << 3)	/* -> WDOG Reset Enable */
 #define IMX2_WDT_WCR_WDE	(1 << 2)	/* -> Watchdog Enable */
 #define IMX2_WDT_WCR_WDZST	(1 << 0)	/* -> Watchdog timer Suspend */
@@ -49,13 +49,15 @@
 
 #define IMX2_WDT_MAX_TIME	128
 #define IMX2_WDT_SHUTDOWN_TIME  10
-#define IMX2_WDT_DEFAULT_TIME	10		/* in seconds */
+#define IMX2_WDT_DEFAULT_TIME	1		/* in seconds */
 
 #define WDOG_SEC_TO_COUNT(s)	((s * 2 - 1) << 8)
 
 #define IMX2_WDT_STATUS_OPEN	0
 #define IMX2_WDT_STATUS_STARTED	1
 #define IMX2_WDT_EXPECT_CLOSE	2
+
+//#define MY_INSERT_AUTORESET
 
 static struct {
 	struct clk *clk;
@@ -107,7 +109,7 @@ static inline void imx2_wdt_setup(void)
 
 static inline void imx2_wdt_ping(void)
 {
-        printk("MY INSERT: imx2_wdt_ping()\n");
+//        printk("MY INSERT: imx2_wdt_ping()\n");
 	__raw_writew(IMX2_WDT_SEQ1, imx2_wdt.base + IMX2_WDT_WSR);
 	__raw_writew(IMX2_WDT_SEQ2, imx2_wdt.base + IMX2_WDT_WSR);
 }
@@ -116,7 +118,7 @@ static void imx2_wdt_timer_ping(unsigned long arg)
 {
 	/* ping it every imx2_wdt.timeout / 2 seconds to prevent reboot */
 	imx2_wdt_ping();
-	mod_timer(&imx2_wdt.timer, jiffies + imx2_wdt.timeout * HZ / 2);
+// MY INSERT	mod_timer(&imx2_wdt.timer, jiffies + imx2_wdt.timeout * HZ / 2);
 }
 
 static void imx2_wdt_start(void)
@@ -288,9 +290,9 @@ static int __init imx2_wdt_probe(struct platform_device *pdev)
 			"Clamped from %u to %u\n", timeout, imx2_wdt.timeout);
 
 	setup_timer(&imx2_wdt.timer, imx2_wdt_timer_ping, 0);
-
+#ifdef MY_INSERT_AUTORESET
         mod_timer(&imx2_wdt.timer, jiffies + imx2_wdt.timeout * HZ / 2);
-
+#endif
 	imx2_wdt_miscdev.parent = &pdev->dev;
 	ret = misc_register(&imx2_wdt_miscdev);
 	if (ret)
