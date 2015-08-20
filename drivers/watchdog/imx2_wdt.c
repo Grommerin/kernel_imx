@@ -118,7 +118,7 @@ static void imx2_wdt_timer_ping(unsigned long arg)
 {
 	/* ping it every imx2_wdt.timeout / 2 seconds to prevent reboot */
 	imx2_wdt_ping();
-// MY INSERT	mod_timer(&imx2_wdt.timer, jiffies + imx2_wdt.timeout * HZ / 2);
+        mod_timer(&imx2_wdt.timer, jiffies + imx2_wdt.timeout * HZ / 2);
 }
 
 static void imx2_wdt_start(void)
@@ -290,9 +290,9 @@ static int __init imx2_wdt_probe(struct platform_device *pdev)
 			"Clamped from %u to %u\n", timeout, imx2_wdt.timeout);
 
 	setup_timer(&imx2_wdt.timer, imx2_wdt_timer_ping, 0);
-#ifdef MY_INSERT_AUTORESET
+
         mod_timer(&imx2_wdt.timer, jiffies + imx2_wdt.timeout * HZ / 2);
-#endif
+
 	imx2_wdt_miscdev.parent = &pdev->dev;
 	ret = misc_register(&imx2_wdt_miscdev);
 	if (ret)
