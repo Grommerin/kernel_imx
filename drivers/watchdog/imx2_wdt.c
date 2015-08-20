@@ -48,7 +48,8 @@
 #define IMX2_WDT_SEQ2		0xAAAA		/* -> service sequence 2 */
 
 #define IMX2_WDT_MAX_TIME	128
-#define IMX2_WDT_DEFAULT_TIME	9		/* in seconds */
+#define IMX2_WDT_SHUTDOWN_TIME  10
+#define IMX2_WDT_DEFAULT_TIME	10		/* in seconds */
 
 #define WDOG_SEC_TO_COUNT(s)	((s * 2 - 1) << 8)
 
@@ -169,10 +170,7 @@ static int imx2_wdt_close(struct inode *inode, struct file *file)
 		imx2_wdt_ping();
 	}
 */
-        mod_timer(&imx2_wdt.timer, jiffies + imx2_wdt.timeout * HZ / 2);
-
-
-	clear_bit(IMX2_WDT_EXPECT_CLOSE, &imx2_wdt.status);
+        clear_bit(IMX2_WDT_EXPECT_CLOSE, &imx2_wdt.status);
 	clear_bit(IMX2_WDT_STATUS_OPEN, &imx2_wdt.status);
 	return 0;
 }
@@ -291,6 +289,8 @@ static int __init imx2_wdt_probe(struct platform_device *pdev)
 
 	setup_timer(&imx2_wdt.timer, imx2_wdt_timer_ping, 0);
 
+        mod_timer(&imx2_wdt.timer, jiffies + imx2_wdt.timeout * HZ / 2);
+
 	imx2_wdt_miscdev.parent = &pdev->dev;
 	ret = misc_register(&imx2_wdt_miscdev);
 	if (ret)
@@ -329,7 +329,7 @@ static void imx2_wdt_shutdown(struct platform_device *pdev)
 		/* we are running, we need to delete the timer but will give
 		 * max timeout before reboot will take place */
 		del_timer_sync(&imx2_wdt.timer);
-		imx2_wdt_set_timeout(IMX2_WDT_MAX_TIME);
+		imx2_wdt_set_timeout(IMX2_WDT_SHUTDOWN_TIME);
 		imx2_wdt_ping();
 
 		dev_crit(imx2_wdt_miscdev.parent,
