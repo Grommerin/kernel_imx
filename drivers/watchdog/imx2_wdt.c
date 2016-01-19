@@ -39,6 +39,7 @@
 
 #define IMX2_WDT_WCR		0x00		/* Control Register */
 #define IMX2_WDT_WCR_WT		(0x01 << 8)	/* -> Watchdog Timeout Field */
+#define IMX2_WDT_WCR_SRS    (1 << 4)    /* -> Software Reset Signal (0) */
 #define IMX2_WDT_WCR_WRE	(1 << 3)	/* -> WDOG Reset Enable */
 #define IMX2_WDT_WCR_WDE	(1 << 2)	/* -> Watchdog Enable */
 #define IMX2_WDT_WCR_WDZST	(1 << 0)	/* -> Watchdog timer Suspend */
@@ -231,6 +232,12 @@ static ssize_t imx2_wdt_write(struct file *file, const char __user *data,
 			return -EFAULT;
 		if (c == 'V')
 			set_bit(IMX2_WDT_EXPECT_CLOSE, &imx2_wdt.status);
+		if (c == 'R') {
+			u16 val = __raw_readw(imx2_wdt.base + IMX2_WDT_WCR);
+			val &= ~IMX2_WDT_WCR_SRS;
+			__raw_writew(val, imx2_wdt.base + IMX2_WDT_WCR);
+		}
+			// set_bit(IMX2_WDT_EXPECT_CLOSE, &imx2_wdt.status);
 	}
 
 	imx2_wdt_ping();

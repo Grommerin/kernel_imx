@@ -141,39 +141,39 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 	/* CAN2 */
 	MX6Q_PAD_KEY_COL4__CAN2_TXCAN,
 	MX6Q_PAD_KEY_ROW4__CAN2_RXCAN,
-	MX6Q_PAD_GPIO_5__GPIO_1_5,		/* Enable */
+	MX6Q_PAD_GPIO_5__GPIO_1_5,		    /* Enable */
 
 	/* My GPIO */
 	MX6Q_PAD_SD1_CMD__GPIO_1_18,		/* GPS_RST# */
-	MX6Q_PAD_GPIO_1__GPIO_1_1,		/* GPS_SB# */
-	MX6Q_PAD_EIM_EB3__GPIO_2_31,		/* GPS_WKUP */	
-        MX6Q_PAD_EIM_D19__GPIO_3_19,            /* GPS_PSS */                   
-        MX6Q_PAD_EIM_D20__GPIO_3_20,            /* GPS_STATUS */
+	MX6Q_PAD_GPIO_1__GPIO_1_1,		    /* GPS_SB# */
+	MX6Q_PAD_EIM_EB3__GPIO_2_31,		/* GPS_WKUP */
+    MX6Q_PAD_EIM_D19__GPIO_3_19,        /* GPS_PSS */
+    MX6Q_PAD_EIM_D20__GPIO_3_20,        /* GPS_STATUS */
 	MX6Q_PAD_SD4_DAT3__GPIO_2_11,		/* GPRS_PWR */
 	MX6Q_PAD_CSI0_DAT18__GPIO_6_4,		/* GPRS_WKUP */
 	MX6Q_PAD_CSI0_DAT19__GPIO_6_5,		/* GPRS_INP */
 	MX6Q_PAD_CSI0_MCLK__GPIO_5_19,		/* GPRS_NETLIGHT */
-        MX6Q_PAD_KEY_ROW1__GPIO_4_9,            /* GPRS_STATUS */
-        MX6Q_PAD_EIM_D28__GPIO_3_28,            /* LED D25 on board */
-        MX6Q_PAD_KEY_COL1__GPIO_4_8,            /* Comparator */     
-        MX6Q_PAD_ENET_RXD1__GPIO_1_26,          /* MarsBoard Normal Boot LED out */
+    MX6Q_PAD_KEY_ROW1__GPIO_4_9,        /* GPRS_STATUS */
+    MX6Q_PAD_EIM_D28__GPIO_3_28,        /* LED D25 on board */
+    MX6Q_PAD_KEY_COL1__GPIO_4_8,        /* Comparator */
+    MX6Q_PAD_ENET_RXD1__GPIO_1_26,      /* MarsBoard Normal Boot LED out */
 
 	/* CCM  */
-	MX6Q_PAD_GPIO_0__CCM_CLKO,		/* SGTL500 sys_mclk */
-	MX6Q_PAD_GPIO_3__CCM_CLKO2,		/* J5 - Camera MCLK */
+	MX6Q_PAD_GPIO_0__CCM_CLKO,			/* SGTL500 sys_mclk */
+	MX6Q_PAD_GPIO_3__CCM_CLKO2,			/* J5 - Camera MCLK */
 
 	/* ECSPI1 */
 	MX6Q_PAD_EIM_D17__ECSPI1_MISO,
 	MX6Q_PAD_EIM_D18__ECSPI1_MOSI,
 	MX6Q_PAD_EIM_D16__ECSPI1_SCLK,
-        MX6Q_PAD_EIM_EB2__GPIO_2_30,    /*CS*/
+    MX6Q_PAD_EIM_EB2__GPIO_2_30,    /*CS*/
 
-        /* ECSPI2 */
-        MX6Q_PAD_EIM_OE__ECSPI2_MISO,
-        MX6Q_PAD_EIM_CS1__ECSPI2_MOSI,
-        MX6Q_PAD_EIM_CS0__ECSPI2_SCLK,
-        MX6Q_PAD_EIM_LBA__GPIO_2_27,    /*CS*/
-        MX6Q_PAD_EIM_A17__GPIO_2_21,    /*IRQ*/
+    /* ECSPI2 */
+    MX6Q_PAD_EIM_OE__ECSPI2_MISO,
+    MX6Q_PAD_EIM_CS1__ECSPI2_MOSI,
+    MX6Q_PAD_EIM_CS0__ECSPI2_SCLK,
+    MX6Q_PAD_EIM_LBA__GPIO_2_27,    /*CS*/
+    MX6Q_PAD_EIM_A17__GPIO_2_21,    /*IRQ*/
 
 	/* ENET */
 	MX6Q_PAD_ENET_MDIO__ENET_MDIO,
@@ -260,9 +260,9 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 	MX6Q_PAD_KEY_ROW3__I2C2_SDA,	/* GPIO4[13] */
 
 	/* I2C3 */
-        MX6Q_PAD_GPIO_5__I2C3_SCL,      /* GPIO1[5] - I2C3_SCL */
-        MX6Q_PAD_GPIO_6__I2C3_SDA,      /* GPIO1[6] - I2C3_sDA */
-	
+    MX6Q_PAD_GPIO_5__I2C3_SCL,      /* GPIO1[5] - I2C3_SCL */
+    MX6Q_PAD_GPIO_6__I2C3_SDA,      /* GPIO1[6] - I2C3_sDA */
+
 	/* DISPLAY */
 	MX6Q_PAD_DI0_DISP_CLK__IPU1_DI0_DISP_CLK,
 	MX6Q_PAD_DI0_PIN15__IPU1_DI0_PIN15,		/* DE */
@@ -316,8 +316,8 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 	/* UART1  */
 //	MX6Q_PAD_SD3_DAT7__UART1_TXD,
 //	MX6Q_PAD_SD3_DAT6__UART1_RXD,
-        MX6Q_PAD_CSI0_DAT10__UART1_TXD,
-        MX6Q_PAD_CSI0_DAT11__UART1_RXD,
+    MX6Q_PAD_CSI0_DAT10__UART1_TXD,
+    MX6Q_PAD_CSI0_DAT11__UART1_RXD,
 //	MX6Q_PAD_EIM_D19__UART1_CTS,
 //	MX6Q_PAD_EIM_D20__UART1_RTS,
 
@@ -329,11 +329,11 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 	MX6Q_PAD_EIM_D24__UART3_TXD,		/* GPS_RXD */
 	MX6Q_PAD_EIM_D25__UART3_RXD,		/* GPS_TXD */
 //	MX6Q_PAD_EIM_D23__UART3_CTS,		/* Не использовать */
-//	MX6Q_PAD_EIM_EB3__UART3_RTS,		
+//	MX6Q_PAD_EIM_EB3__UART3_RTS,
 
 	/* UART4 */
-	MX6Q_PAD_KEY_COL0__UART4_TXD,           /* GPRS_TXD */
-	MX6Q_PAD_KEY_ROW0__UART4_RXD,           /* GPRS_RXD */
+	MX6Q_PAD_KEY_COL0__UART4_TXD,       /* GPRS_TXD */
+	MX6Q_PAD_KEY_ROW0__UART4_RXD,       /* GPRS_RXD */
 //	MX6Q_PAD_CSI0_DAT16__UART4_RTS,
 //	MX6Q_PAD_CSI0_DAT16__UART4_CTS,
 
@@ -346,22 +346,22 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 //	MX6Q_PAD_GPIO_1__USBOTG_ID,
 	MX6Q_PAD_ENET_RX_ER__ANATOP_USBOTG_ID,
 
-        /* USB power pin */
-        MX6Q_PAD_EIM_D22__GPIO_3_22,
+    /* USB power pin */
+    MX6Q_PAD_EIM_D22__GPIO_3_22,
 
 	/* USB OC pin */
 //	MX6Q_PAD_KEY_COL4__USBOH3_USBOTG_OC,
 	MX6Q_PAD_EIM_D21__USBOH3_USBOTG_OC,
 //	MX6Q_PAD_EIM_D30__USBOH3_USBH1_OC,
 
-        /* USDHC2 */
-        MX6Q_PAD_SD2_CLK__USDHC2_CLK_50MHZ,
-        MX6Q_PAD_SD2_CMD__USDHC2_CMD_50MHZ,
-        MX6Q_PAD_SD2_DAT0__USDHC2_DAT0_50MHZ,
-        MX6Q_PAD_SD2_DAT1__USDHC2_DAT1_50MHZ,
-        MX6Q_PAD_SD2_DAT2__USDHC2_DAT2_50MHZ,
-        MX6Q_PAD_SD2_DAT3__USDHC2_DAT3_50MHZ,
-        MX6Q_PAD_GPIO_4__GPIO_1_4,            /* R6 - SD2_CD */
+    /* USDHC2 */
+    MX6Q_PAD_SD2_CLK__USDHC2_CLK_50MHZ,
+    MX6Q_PAD_SD2_CMD__USDHC2_CMD_50MHZ,
+    MX6Q_PAD_SD2_DAT0__USDHC2_DAT0_50MHZ,
+    MX6Q_PAD_SD2_DAT1__USDHC2_DAT1_50MHZ,
+    MX6Q_PAD_SD2_DAT2__USDHC2_DAT2_50MHZ,
+    MX6Q_PAD_SD2_DAT3__USDHC2_DAT3_50MHZ,
+    MX6Q_PAD_GPIO_4__GPIO_1_4,            /* R6 - SD2_CD */
 
 	/* USDHC3 */
 	MX6Q_PAD_SD3_CLK__USDHC3_CLK_50MHZ,
