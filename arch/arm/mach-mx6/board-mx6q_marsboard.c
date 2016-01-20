@@ -85,8 +85,8 @@
 #define MX6Q_MARSBOARD_CAP_TCH_INT1	IMX_GPIO_NR(1, 9)
 #define MX6Q_MARSBOARD_RES_TCH_INT      IMX_GPIO_NR(2, 21)
 #define MX6Q_MARSBOARD_USB_HUB_RESET	IMX_GPIO_NR(7, 12)
-#define MX6Q_MARSBOARD_CAN1_EN		IMX_GPIO_NR(1, 4)
-#define MX6Q_MARSBOARD_CAN2_EN		IMX_GPIO_NR(1, 5)
+// #define MX6Q_MARSBOARD_CAN1_EN		IMX_GPIO_NR(1, 4)
+// #define MX6Q_MARSBOARD_CAN2_EN		IMX_GPIO_NR(1, 5)
 #define MX6Q_MARSBOARD_MENU_KEY		IMX_GPIO_NR(2, 1)
 #define MX6Q_MARSBOARD_BACK_KEY		IMX_GPIO_NR(2, 2)
 #define MX6Q_MARSBOARD_ONOFF_KEY	IMX_GPIO_NR(2, 3)
@@ -136,12 +136,10 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 	/* CAN1  */
 	MX6Q_PAD_KEY_ROW2__CAN1_RXCAN,
 	MX6Q_PAD_KEY_COL2__CAN1_TXCAN,
-	MX6Q_PAD_GPIO_4__GPIO_1_4,		/* Enable */
 
 	/* CAN2 */
 	MX6Q_PAD_KEY_COL4__CAN2_TXCAN,
 	MX6Q_PAD_KEY_ROW4__CAN2_RXCAN,
-	MX6Q_PAD_GPIO_5__GPIO_1_5,		    /* Enable */
 
 	/* My GPIO */
 	MX6Q_PAD_SD1_CMD__GPIO_1_18,		/* GPS_RST# */
@@ -153,9 +151,11 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 	MX6Q_PAD_CSI0_DAT18__GPIO_6_4,		/* GPRS_WKUP */
 	MX6Q_PAD_CSI0_DAT19__GPIO_6_5,		/* GPRS_INP */
 	MX6Q_PAD_CSI0_MCLK__GPIO_5_19,		/* GPRS_NETLIGHT */
-    MX6Q_PAD_KEY_ROW1__GPIO_4_9,        /* GPRS_STATUS */
+    // MX6Q_PAD_KEY_ROW1__GPIO_4_9,        /* GPRS_STATUS */
     MX6Q_PAD_EIM_D28__GPIO_3_28,        /* LED D25 on board */
-    MX6Q_PAD_KEY_COL1__GPIO_4_8,        /* Comparator */
+    // MX6Q_PAD_KEY_COL1__GPIO_4_8,        /* Comparator */
+    MX6Q_PAD_GPIO_4__GPIO_1_4,			/* NEW GPRS_STATUS */
+    MX6Q_PAD_GPIO_5__GPIO_1_5,		    /* NEW Comparator */
     MX6Q_PAD_ENET_RXD1__GPIO_1_26,      /* MarsBoard Normal Boot LED out */
 
 	/* CCM  */
@@ -338,9 +338,8 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 //	MX6Q_PAD_CSI0_DAT16__UART4_CTS,
 
 	/* UART5 */
-//	MX6Q_PAD_KEY_COL1__UART5_TXD,
-//	MX6Q_PAD_KEY_ROW1__UART5_RXD,
-
+	MX6Q_PAD_KEY_COL1__UART5_TXD,
+	MX6Q_PAD_KEY_ROW1__UART5_RXD,
 
 	/* USBOTG ID pin */
 //	MX6Q_PAD_GPIO_1__USBOTG_ID,
@@ -361,7 +360,7 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
     MX6Q_PAD_SD2_DAT1__USDHC2_DAT1_50MHZ,
     MX6Q_PAD_SD2_DAT2__USDHC2_DAT2_50MHZ,
     MX6Q_PAD_SD2_DAT3__USDHC2_DAT3_50MHZ,
-    MX6Q_PAD_GPIO_4__GPIO_1_4,            /* R6 - SD2_CD */
+    // MX6Q_PAD_GPIO_4__GPIO_1_4,            /* R6 - SD2_CD */
 
 	/* USDHC3 */
 	MX6Q_PAD_SD3_CLK__USDHC3_CLK_50MHZ,
@@ -513,7 +512,7 @@ static inline void mx6q_marsboard_init_uart(void)
 	imx6q_add_imx_uart(1, NULL);
 	imx6q_add_imx_uart(2, NULL);
 	imx6q_add_imx_uart(3, NULL);
-//   	imx6q_add_imx_uart(4, NULL);
+   	imx6q_add_imx_uart(4, NULL);
 }
 
 static int mx6q_marsboard_fec_phy_init(struct phy_device *phydev)
@@ -548,12 +547,12 @@ static int mx6q_marsboard_fec_phy_init(struct phy_device *phydev)
         val |= 0x0100;
         phy_write(phydev, 0x1e, val);
 
-	/* rgmii gtx clock delay */
-	phy_write(phydev, 0x1d, 0xb);
-	val = phy_read(phydev, 0x1e);
-	val &= ~0x60;
-	val |= 0x20;
-	phy_write(phydev, 0x1e, val);
+		/* rgmii gtx clock delay */
+		phy_write(phydev, 0x1d, 0xb);
+		val = phy_read(phydev, 0x1e);
+		val &= ~0x60;
+		val |= 0x20;
+		phy_write(phydev, 0x1e, val);
 
         /*check phy power*/
         val = phy_read(phydev, 0x0);
@@ -863,17 +862,32 @@ static struct ahci_platform_data mx6q_marsboard_sata_data = {
 
 
 static struct gpio mx6q_marsboard_flexcan_gpios[] = {
-	{ MX6Q_MARSBOARD_CAN1_EN, GPIOF_OUT_INIT_LOW, "flexcan1-en" },
-	{ MX6Q_MARSBOARD_CAN2_EN, GPIOF_OUT_INIT_LOW, "flexcan2-en" },
+/*
+	 { MX6Q_MARSBOARD_CAN1_EN, GPIOF_OUT_INIT_LOW, "flexcan1-en" },
+	 { MX6Q_MARSBOARD_CAN2_EN, GPIOF_OUT_INIT_LOW, "flexcan2-en" },
+*/
 };
 
 static void mx6q_marsboard_flexcan0_switch(int enable)
 {
+/*
 	if (enable) {
 		gpio_set_value(MX6Q_MARSBOARD_CAN1_EN, 1);
 	} else {
 		gpio_set_value(MX6Q_MARSBOARD_CAN1_EN, 0);
 	}
+*/
+}
+
+static void mx6q_marsboard_flexcan1_switch(int enable)
+{
+/*
+	if (enable) {
+		gpio_set_value(MX6Q_MARSBOARD_CAN2_EN, 1);
+	} else {
+		gpio_set_value(MX6Q_MARSBOARD_CAN2_EN, 0);
+	}
+*/
 }
 
 static void mx6q_marsboard_flexcan0_gpio_switch(int enable)
@@ -895,15 +909,6 @@ static void mx6q_marsboard_flexcan1_gpio_switch(int enable)
 		gpio_set_value(MX6Q_MARSBOARD_CAN2_GPIO, 0);
 	}
 */
-}
-
-static void mx6q_marsboard_flexcan1_switch(int enable)
-{
-	if (enable) {
-		gpio_set_value(MX6Q_MARSBOARD_CAN2_EN, 1);
-	} else {
-		gpio_set_value(MX6Q_MARSBOARD_CAN2_EN, 0);
-	}
 }
 
 static const struct flexcan_platform_data
