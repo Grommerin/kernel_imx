@@ -76,6 +76,8 @@
 #include "crm_regs.h"
 #include "cpu_op-mx6.h"
 
+#define MX6Q_MARSBOARD_STRIM
+
 #define MX6Q_MARSBOARD_SD3_CD		IMX_GPIO_NR(7, 0)
 #define MX6Q_MARSBOARD_SD3_WP		IMX_GPIO_NR(7, 1)
 #define MX6Q_MARSBOARD_SD2_CD           IMX_GPIO_NR(1, 4)
@@ -85,8 +87,10 @@
 #define MX6Q_MARSBOARD_CAP_TCH_INT1	IMX_GPIO_NR(1, 9)
 #define MX6Q_MARSBOARD_RES_TCH_INT      IMX_GPIO_NR(2, 21)
 #define MX6Q_MARSBOARD_USB_HUB_RESET	IMX_GPIO_NR(7, 12)
-// #define MX6Q_MARSBOARD_CAN1_EN		IMX_GPIO_NR(1, 4)
-// #define MX6Q_MARSBOARD_CAN2_EN		IMX_GPIO_NR(1, 5)
+#ifndef MX6Q_MARSBOARD_STRIM
+#define MX6Q_MARSBOARD_CAN1_STBY	IMX_GPIO_NR(1, 2)
+#endif
+//#define MX6Q_MARSBOARD_CAN1_EN		IMX_GPIO_NR(1, 4)
 #define MX6Q_MARSBOARD_MENU_KEY		IMX_GPIO_NR(2, 1)
 #define MX6Q_MARSBOARD_BACK_KEY		IMX_GPIO_NR(2, 2)
 #define MX6Q_MARSBOARD_ONOFF_KEY	IMX_GPIO_NR(2, 3)
@@ -95,7 +99,7 @@
 #define MX6Q_MARSBOARD_VOL_DOWN_KEY	IMX_GPIO_NR(4, 5)
 #define MX6Q_MARSBOARD_CSI0_RST		IMX_GPIO_NR(1, 8)
 #define MX6Q_MARSBOARD_CSI0_PWN		IMX_GPIO_NR(1, 6)
-//#define MX6Q_MARSBOARD_LCD_PWN	IMX_GPIO_NR(1, 29)
+//#define MX6Q_MARSBOARD_LCD_PWN		IMX_GPIO_NR(1, 29)
 #define MX6Q_MARSBOARD_LED_PWN		IMX_GPIO_NR(6, 15)
 #define MX6Q_MARSBOARD_SYS_LED          IMX_GPIO_NR(5, 2)
 #define MX6Q_MARSBOARD_USER_LED         IMX_GPIO_NR(3, 28)
@@ -103,19 +107,6 @@
 #define MX6Q_MARSBOARD_SD3_WP_PADCFG	(PAD_CTL_PKE | PAD_CTL_PUE |	\
 		PAD_CTL_PUS_22K_UP | PAD_CTL_SPEED_MED |	\
 		PAD_CTL_DSE_40ohm | PAD_CTL_HYS)
-
-#define MX6Q_MARSBOARD_GPS_RST		IMX_GPIO_NR(1, 18)
-#define MX6Q_MARSBOARD_GPS_SB		IMX_GPIO_NR(1, 1)
-#define MX6Q_MARSBOARD_GPS_WKUP		IMX_GPIO_NR(2, 31)
-#define MX6Q_MARSBOARD_GPS_PSS		IMX_GPIO_NR(3, 19)
-#define MX6Q_MARSBOARD_GPS_STATUS	IMX_GPIO_NR(3, 20)
-#define MX6Q_MARSBOARD_GPRS_PWR		IMX_GPIO_NR(2, 11)
-#define MX6Q_MARSBOARD_GPRS_STATUS	IMX_GPIO_NR(4, 9)
-#define MX6Q_MARSBOARD_GPRS_NETLIGHT	IMX_GPIO_NR(5, 19)
-#define MX6Q_MARSBOARD_GPRS_WKUP	IMX_GPIO_NR(6, 4)
-#define MX6Q_MARSBOARD_GPRS_INP		IMX_GPIO_NR(6, 5)
-#define MX6Q_MARSBOARD_MARS_STATUS	IMX_GPIO_NR(1, 26)
-
 
 void __init early_console_setup(unsigned long base, struct clk *clk);
 static struct clk *sata_clk;
@@ -127,6 +118,24 @@ extern void (*put_cpu_regulator)(void);
 extern void mx6_cpu_regulator_init(void);
 
 static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
+#ifdef MX6Q_MARSBOARD_STRIM
+	/* My GPIO */
+	MX6Q_PAD_SD1_CMD__GPIO_1_18,		/* GPS_RST# */
+	MX6Q_PAD_GPIO_1__GPIO_1_1,		    /* GPS_SB# */
+	MX6Q_PAD_EIM_EB3__GPIO_2_31,		/* GPS_WKUP */
+	MX6Q_PAD_EIM_D19__GPIO_3_19,        /* GPS_PSS */
+	MX6Q_PAD_EIM_D20__GPIO_3_20,        /* GPS_STATUS */
+	MX6Q_PAD_SD4_DAT3__GPIO_2_11,		/* GPRS_PWR */
+	MX6Q_PAD_CSI0_DAT18__GPIO_6_4,		/* GPRS_WKUP */
+	MX6Q_PAD_CSI0_DAT19__GPIO_6_5,		/* GPRS_INP */
+	MX6Q_PAD_CSI0_MCLK__GPIO_5_19,		/* GPRS_NETLIGHT */
+	MX6Q_PAD_EIM_D28__GPIO_3_28,        /* LED D25 on board */
+	// MX6Q_PAD_KEY_ROW1__GPIO_4_9,        /* GPRS_STATUS */
+	// MX6Q_PAD_KEY_COL1__GPIO_4_8,        /* Comparator */
+	MX6Q_PAD_CSI0_DAT8__GPIO_5_26,		/* new GPRS_STATUS */
+	MX6Q_PAD_CSI0_DAT9__GPIO_5_27,		/* new Comparator */
+#endif
+
 	/* AUDMUX */
 	MX6Q_PAD_SD2_DAT0__AUDMUX_AUD4_RXD,
 	MX6Q_PAD_SD2_DAT3__AUDMUX_AUD4_TXC,
@@ -136,44 +145,34 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 	/* CAN1  */
 	MX6Q_PAD_KEY_ROW2__CAN1_RXCAN,
 	MX6Q_PAD_KEY_COL2__CAN1_TXCAN,
+#ifndef MX6Q_MARSBOARD_STRIM
+	MX6Q_PAD_GPIO_2__GPIO_1_2,		/* STNDBY */
+	MX6Q_PAD_GPIO_7__GPIO_1_7,		/* NERR */
+	MX6Q_PAD_GPIO_4__GPIO_1_4,		/* Enable */
+#endif
 
-	/* CAN2 */
+#ifdef MX6Q_MARSBOARD_STRIM
+	/* CAN2  */
 	MX6Q_PAD_KEY_COL4__CAN2_TXCAN,
 	MX6Q_PAD_KEY_ROW4__CAN2_RXCAN,
-
-	/* My GPIO */
-	MX6Q_PAD_SD1_CMD__GPIO_1_18,		/* GPS_RST# */
-	MX6Q_PAD_GPIO_1__GPIO_1_1,		    /* GPS_SB# */
-	MX6Q_PAD_EIM_EB3__GPIO_2_31,		/* GPS_WKUP */
-    MX6Q_PAD_EIM_D19__GPIO_3_19,        /* GPS_PSS */
-    MX6Q_PAD_EIM_D20__GPIO_3_20,        /* GPS_STATUS */
-	MX6Q_PAD_SD4_DAT3__GPIO_2_11,		/* GPRS_PWR */
-	MX6Q_PAD_CSI0_DAT18__GPIO_6_4,		/* GPRS_WKUP */
-	MX6Q_PAD_CSI0_DAT19__GPIO_6_5,		/* GPRS_INP */
-	MX6Q_PAD_CSI0_MCLK__GPIO_5_19,		/* GPRS_NETLIGHT */
-    // MX6Q_PAD_KEY_ROW1__GPIO_4_9,        /* GPRS_STATUS */
-    MX6Q_PAD_EIM_D28__GPIO_3_28,        /* LED D25 on board */
-    // MX6Q_PAD_KEY_COL1__GPIO_4_8,        /* Comparator */
-    MX6Q_PAD_GPIO_4__GPIO_1_4,			/* NEW GPRS_STATUS */
-    MX6Q_PAD_GPIO_5__GPIO_1_5,		    /* NEW Comparator */
-    MX6Q_PAD_ENET_RXD1__GPIO_1_26,      /* MarsBoard Normal Boot LED out */
+#endif
 
 	/* CCM  */
-	MX6Q_PAD_GPIO_0__CCM_CLKO,			/* SGTL500 sys_mclk */
-	MX6Q_PAD_GPIO_3__CCM_CLKO2,			/* J5 - Camera MCLK */
+	MX6Q_PAD_GPIO_0__CCM_CLKO,		/* SGTL500 sys_mclk */
+	MX6Q_PAD_GPIO_3__CCM_CLKO2,		/* J5 - Camera MCLK */
 
 	/* ECSPI1 */
 	MX6Q_PAD_EIM_D17__ECSPI1_MISO,
 	MX6Q_PAD_EIM_D18__ECSPI1_MOSI,
 	MX6Q_PAD_EIM_D16__ECSPI1_SCLK,
-    MX6Q_PAD_EIM_EB2__GPIO_2_30,    /*CS*/
+        MX6Q_PAD_EIM_EB2__GPIO_2_30,    /*CS*/
 
-    /* ECSPI2 */
-    MX6Q_PAD_EIM_OE__ECSPI2_MISO,
-    MX6Q_PAD_EIM_CS1__ECSPI2_MOSI,
-    MX6Q_PAD_EIM_CS0__ECSPI2_SCLK,
-    MX6Q_PAD_EIM_LBA__GPIO_2_27,    /*CS*/
-    MX6Q_PAD_EIM_A17__GPIO_2_21,    /*IRQ*/
+        /* ECSPI2 */
+        MX6Q_PAD_EIM_OE__ECSPI2_MISO,
+        MX6Q_PAD_EIM_CS1__ECSPI2_MOSI,
+        MX6Q_PAD_EIM_CS0__ECSPI2_SCLK,
+        MX6Q_PAD_EIM_LBA__GPIO_2_27,    /*CS*/
+        MX6Q_PAD_EIM_A17__GPIO_2_21,    /*IRQ*/
 
 	/* ENET */
 	MX6Q_PAD_ENET_MDIO__ENET_MDIO,
@@ -214,7 +213,7 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 //	MX6Q_PAD_EIM_LBA__GPIO_2_27,	/* J12 - Boot Mode Select */
 	MX6Q_PAD_EIM_EB0__GPIO_2_28,	/* J12 - Boot Mode Select */
 	MX6Q_PAD_EIM_EB1__GPIO_2_29,	/* J12 - Boot Mode Select */
-//	MX6Q_PAD_EIM_EB3__GPIO_2_31,	/* J12 - Boot Mode Select */
+	MX6Q_PAD_EIM_EB3__GPIO_2_31,	/* J12 - Boot Mode Select */
 
 	/* GPIO3 */
 	MX6Q_PAD_EIM_DA0__GPIO_3_0,	/* J12 - Boot Mode Select */
@@ -260,8 +259,8 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 	MX6Q_PAD_KEY_ROW3__I2C2_SDA,	/* GPIO4[13] */
 
 	/* I2C3 */
-    MX6Q_PAD_GPIO_5__I2C3_SCL,      /* GPIO1[5] - I2C3_SCL */
-    MX6Q_PAD_GPIO_6__I2C3_SDA,      /* GPIO1[6] - I2C3_sDA */
+        MX6Q_PAD_GPIO_5__I2C3_SCL,      /* GPIO1[5] - I2C3_SCL */
+        MX6Q_PAD_GPIO_6__I2C3_SDA,      /* GPIO1[6] - I2C3_sDA */
 
 	/* DISPLAY */
 	MX6Q_PAD_DI0_DISP_CLK__IPU1_DI0_DISP_CLK,
@@ -314,53 +313,47 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 	MX6Q_PAD_SD4_DAT2__PWM4_PWMO,
 
 	/* UART1  */
-//	MX6Q_PAD_SD3_DAT7__UART1_TXD,
-//	MX6Q_PAD_SD3_DAT6__UART1_RXD,
-    MX6Q_PAD_CSI0_DAT10__UART1_TXD,
-    MX6Q_PAD_CSI0_DAT11__UART1_RXD,
-//	MX6Q_PAD_EIM_D19__UART1_CTS,
-//	MX6Q_PAD_EIM_D20__UART1_RTS,
+	MX6Q_PAD_CSI0_DAT10__UART1_TXD,
+	MX6Q_PAD_CSI0_DAT11__UART1_RXD,
 
 	/* UART2 for debug */
 	MX6Q_PAD_EIM_D26__UART2_TXD,
 	MX6Q_PAD_EIM_D27__UART2_RXD,
 
+#ifdef MX6Q_MARSBOARD_STRIM
 	/* UART3 */
 	MX6Q_PAD_EIM_D24__UART3_TXD,		/* GPS_RXD */
 	MX6Q_PAD_EIM_D25__UART3_RXD,		/* GPS_TXD */
-//	MX6Q_PAD_EIM_D23__UART3_CTS,		/* Не использовать */
-//	MX6Q_PAD_EIM_EB3__UART3_RTS,
-
+	+
 	/* UART4 */
 	MX6Q_PAD_KEY_COL0__UART4_TXD,       /* GPRS_TXD */
 	MX6Q_PAD_KEY_ROW0__UART4_RXD,       /* GPRS_RXD */
-//	MX6Q_PAD_CSI0_DAT16__UART4_RTS,
-//	MX6Q_PAD_CSI0_DAT16__UART4_CTS,
-
+	+
 	/* UART5 */
 	MX6Q_PAD_KEY_COL1__UART5_TXD,
 	MX6Q_PAD_KEY_ROW1__UART5_RXD,
+#endif
 
 	/* USBOTG ID pin */
 //	MX6Q_PAD_GPIO_1__USBOTG_ID,
 	MX6Q_PAD_ENET_RX_ER__ANATOP_USBOTG_ID,
 
-    /* USB power pin */
-    MX6Q_PAD_EIM_D22__GPIO_3_22,
+        /* USB power pin */
+        MX6Q_PAD_EIM_D22__GPIO_3_22,
 
 	/* USB OC pin */
 //	MX6Q_PAD_KEY_COL4__USBOH3_USBOTG_OC,
 	MX6Q_PAD_EIM_D21__USBOH3_USBOTG_OC,
 //	MX6Q_PAD_EIM_D30__USBOH3_USBH1_OC,
 
-    /* USDHC2 */
-    MX6Q_PAD_SD2_CLK__USDHC2_CLK_50MHZ,
-    MX6Q_PAD_SD2_CMD__USDHC2_CMD_50MHZ,
-    MX6Q_PAD_SD2_DAT0__USDHC2_DAT0_50MHZ,
-    MX6Q_PAD_SD2_DAT1__USDHC2_DAT1_50MHZ,
-    MX6Q_PAD_SD2_DAT2__USDHC2_DAT2_50MHZ,
-    MX6Q_PAD_SD2_DAT3__USDHC2_DAT3_50MHZ,
-    // MX6Q_PAD_GPIO_4__GPIO_1_4,            /* R6 - SD2_CD */
+        /* USDHC2 */
+        MX6Q_PAD_SD2_CLK__USDHC2_CLK_50MHZ,
+        MX6Q_PAD_SD2_CMD__USDHC2_CMD_50MHZ,
+        MX6Q_PAD_SD2_DAT0__USDHC2_DAT0_50MHZ,
+        MX6Q_PAD_SD2_DAT1__USDHC2_DAT1_50MHZ,
+        MX6Q_PAD_SD2_DAT2__USDHC2_DAT2_50MHZ,
+        MX6Q_PAD_SD2_DAT3__USDHC2_DAT3_50MHZ,
+        MX6Q_PAD_GPIO_4__GPIO_1_4,            /* R6 - SD2_CD */
 
 	/* USDHC3 */
 	MX6Q_PAD_SD3_CLK__USDHC3_CLK_50MHZ,
@@ -373,39 +366,43 @@ static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
 	NEW_PAD_CTRL(MX6Q_PAD_SD3_DAT4__GPIO_7_1, MX6Q_MARSBOARD_SD3_WP_PADCFG),
 
 	/* USDHC4 */
-//	MX6Q_PAD_SD4_CLK__USDHC4_CLK_50MHZ,
-//	MX6Q_PAD_SD4_CMD__USDHC4_CMD_50MHZ,
-//	MX6Q_PAD_SD4_DAT0__USDHC4_DAT0_50MHZ,
-//	MX6Q_PAD_SD4_DAT1__USDHC4_DAT1_50MHZ,
-//	MX6Q_PAD_SD4_DAT2__USDHC4_DAT2_50MHZ,
-//	MX6Q_PAD_SD4_DAT3__USDHC4_DAT3_50MHZ,
-//	MX6Q_PAD_NANDF_D6__GPIO_2_6,		/* J20 - SD4_CD */
-//	MX6Q_PAD_NANDF_D7__GPIO_2_7,		/* SD4_WP */
+#if 0
+	MX6Q_PAD_SD4_CLK__USDHC4_CLK_50MHZ,
+	MX6Q_PAD_SD4_CMD__USDHC4_CMD_50MHZ,
+	MX6Q_PAD_SD4_DAT0__USDHC4_DAT0_50MHZ,
+	MX6Q_PAD_SD4_DAT1__USDHC4_DAT1_50MHZ,
+	MX6Q_PAD_SD4_DAT2__USDHC4_DAT2_50MHZ,
+	MX6Q_PAD_SD4_DAT3__USDHC4_DAT3_50MHZ,
+	MX6Q_PAD_NANDF_D6__GPIO_2_6,		/* J20 - SD4_CD */
+	MX6Q_PAD_NANDF_D7__GPIO_2_7,		/* SD4_WP */
+#endif
 };
 
 static iomux_v3_cfg_t mx6q_marsboard_csi0_sensor_pads[] = {
 	/* IPU1 Camera */
-//	MX6Q_PAD_CSI0_DAT8__IPU1_CSI0_D_8,
-//	MX6Q_PAD_CSI0_DAT9__IPU1_CSI0_D_9,
-//	MX6Q_PAD_CSI0_DAT10__IPU1_CSI0_D_10,
-//	MX6Q_PAD_CSI0_DAT11__IPU1_CSI0_D_11,
-//	MX6Q_PAD_CSI0_DAT12__IPU1_CSI0_D_12,
-//	MX6Q_PAD_CSI0_DAT13__IPU1_CSI0_D_13,
-//	MX6Q_PAD_CSI0_DAT14__IPU1_CSI0_D_14,
-//	MX6Q_PAD_CSI0_DAT15__IPU1_CSI0_D_15,
-//	MX6Q_PAD_CSI0_DAT16__IPU1_CSI0_D_16,
-//	MX6Q_PAD_CSI0_DAT17__IPU1_CSI0_D_17,
-//	MX6Q_PAD_CSI0_DAT18__IPU1_CSI0_D_18,
-//	MX6Q_PAD_CSI0_DAT19__IPU1_CSI0_D_19,
-//	MX6Q_PAD_CSI0_DATA_EN__IPU1_CSI0_DATA_EN,
-//	MX6Q_PAD_CSI0_MCLK__IPU1_CSI0_HSYNC,
-//	MX6Q_PAD_CSI0_PIXCLK__IPU1_CSI0_PIXCLK,
-//	MX6Q_PAD_CSI0_VSYNC__IPU1_CSI0_VSYNC,
+#ifndef MX6Q_MARSBOARD_STRIM
+	MX6Q_PAD_CSI0_DAT8__IPU1_CSI0_D_8,
+	MX6Q_PAD_CSI0_DAT9__IPU1_CSI0_D_9,
+	MX6Q_PAD_CSI0_DAT10__IPU1_CSI0_D_10,
+	MX6Q_PAD_CSI0_DAT11__IPU1_CSI0_D_11,
+	MX6Q_PAD_CSI0_DAT12__IPU1_CSI0_D_12,
+	MX6Q_PAD_CSI0_DAT13__IPU1_CSI0_D_13,
+	MX6Q_PAD_CSI0_DAT14__IPU1_CSI0_D_14,
+	MX6Q_PAD_CSI0_DAT15__IPU1_CSI0_D_15,
+	MX6Q_PAD_CSI0_DAT16__IPU1_CSI0_D_16,
+	MX6Q_PAD_CSI0_DAT17__IPU1_CSI0_D_17,
+	MX6Q_PAD_CSI0_DAT18__IPU1_CSI0_D_18,
+	MX6Q_PAD_CSI0_DAT19__IPU1_CSI0_D_19,
+	MX6Q_PAD_CSI0_DATA_EN__IPU1_CSI0_DATA_EN,
+	MX6Q_PAD_CSI0_MCLK__IPU1_CSI0_HSYNC,
+	MX6Q_PAD_CSI0_PIXCLK__IPU1_CSI0_PIXCLK,
+	MX6Q_PAD_CSI0_VSYNC__IPU1_CSI0_VSYNC,
 //	MX6Q_PAD_GPIO_6__GPIO_1_6,		/* J5 - Camera GP */
-//	MX6Q_PAD_GPIO_8__GPIO_1_8,		/* J5 - Camera Reset */
-//	MX6Q_PAD_SD1_DAT0__GPIO_1_16,		/* J5 - Camera GP */
-//	MX6Q_PAD_NANDF_D5__GPIO_2_5,		/* J16 - MIPI GP */
-//	MX6Q_PAD_NANDF_WP_B__GPIO_6_9,		/* J16 - MIPI GP */
+	MX6Q_PAD_GPIO_8__GPIO_1_8,		/* J5 - Camera Reset */
+	MX6Q_PAD_SD1_DAT0__GPIO_1_16,		/* J5 - Camera GP */
+	MX6Q_PAD_NANDF_D5__GPIO_2_5,		/* J16 - MIPI GP */
+	MX6Q_PAD_NANDF_WP_B__GPIO_6_9,		/* J16 - MIPI GP */
+#endif
 };
 
 #define MX6Q_USDHC_PAD_SETTING(id, speed)	\
@@ -510,9 +507,11 @@ static inline void mx6q_marsboard_init_uart(void)
 {
 	imx6q_add_imx_uart(0, NULL);
 	imx6q_add_imx_uart(1, NULL);
+#ifdef MX6Q_MARSBOARD_STRIM
 	imx6q_add_imx_uart(2, NULL);
 	imx6q_add_imx_uart(3, NULL);
-   	imx6q_add_imx_uart(4, NULL);
+	imx6q_add_imx_uart(4, NULL);
+#endif
 }
 
 static int mx6q_marsboard_fec_phy_init(struct phy_device *phydev)
@@ -547,12 +546,12 @@ static int mx6q_marsboard_fec_phy_init(struct phy_device *phydev)
         val |= 0x0100;
         phy_write(phydev, 0x1e, val);
 
-		/* rgmii gtx clock delay */
-		phy_write(phydev, 0x1d, 0xb);
-		val = phy_read(phydev, 0x1e);
-		val &= ~0x60;
-		val |= 0x20;
-		phy_write(phydev, 0x1e, val);
+	/* rgmii gtx clock delay */
+	phy_write(phydev, 0x1d, 0xb);
+	val = phy_read(phydev, 0x1e);
+	val &= ~0x60;
+	val |= 0x20;
+	phy_write(phydev, 0x1e, val);
 
         /*check phy power*/
         val = phy_read(phydev, 0x0);
@@ -860,68 +859,28 @@ static struct ahci_platform_data mx6q_marsboard_sata_data = {
 	.exit = mx6q_marsboard_sata_exit,
 };
 
-
+#if 0
 static struct gpio mx6q_marsboard_flexcan_gpios[] = {
-/*
-	 { MX6Q_MARSBOARD_CAN1_EN, GPIOF_OUT_INIT_LOW, "flexcan1-en" },
-	 { MX6Q_MARSBOARD_CAN2_EN, GPIOF_OUT_INIT_LOW, "flexcan2-en" },
-*/
+	{ MX6Q_MARSBOARD_CAN1_EN, GPIOF_OUT_INIT_LOW, "flexcan1-en" },
+	{ MX6Q_MARSBOARD_CAN1_STBY, GPIOF_OUT_INIT_LOW, "flexcan1-stby" },
 };
 
 static void mx6q_marsboard_flexcan0_switch(int enable)
 {
-/*
 	if (enable) {
 		gpio_set_value(MX6Q_MARSBOARD_CAN1_EN, 1);
+		gpio_set_value(MX6Q_MARSBOARD_CAN1_STBY, 1);
 	} else {
 		gpio_set_value(MX6Q_MARSBOARD_CAN1_EN, 0);
+		gpio_set_value(MX6Q_MARSBOARD_CAN1_STBY, 0);
 	}
-*/
-}
-
-static void mx6q_marsboard_flexcan1_switch(int enable)
-{
-/*
-	if (enable) {
-		gpio_set_value(MX6Q_MARSBOARD_CAN2_EN, 1);
-	} else {
-		gpio_set_value(MX6Q_MARSBOARD_CAN2_EN, 0);
-	}
-*/
-}
-
-static void mx6q_marsboard_flexcan0_gpio_switch(int enable)
-{
-/*
-	if (enable) {
-		gpio_set_value(MX6Q_MARSBOARD_CAN1_GPIO, 1);
-	} else {
-		gpio_set_value(MX6Q_MARSBOARD_CAN1_GPIO, 0);
-	}
-*/
-}
-static void mx6q_marsboard_flexcan1_gpio_switch(int enable)
-{
-/*
-	if (enable) {
-		gpio_set_value(MX6Q_MARSBOARD_CAN2_GPIO, 1);
-	} else {
-		gpio_set_value(MX6Q_MARSBOARD_CAN2_GPIO, 0);
-	}
-*/
 }
 
 static const struct flexcan_platform_data
 	mx6q_marsboard_flexcan0_pdata __initconst = {
 	.transceiver_switch = mx6q_marsboard_flexcan0_switch,
-	.gpio_switch = mx6q_marsboard_flexcan0_gpio_switch,
 };
-
-static const struct flexcan_platform_data
-	mx6q_marsboard_flexcan1_pdata __initconst = {
-	.transceiver_switch = mx6q_marsboard_flexcan1_switch,
-	.gpio_switch = mx6q_marsboard_flexcan1_gpio_switch,
-};
+#endif
 
 static struct viv_gpu_platform_data imx6q_gpu_pdata __initdata = {
 	.reserved_mem_size = SZ_128M,
@@ -1347,7 +1306,9 @@ static void __init mx6_marsboard_board_init(void)
 
 	gp_reg_id = marsboard_dvfscore_data.reg_id;
 	mx6q_marsboard_init_uart();
-//	imx6q_add_mxc_hdmi_core(&hdmi_core_data);
+#ifndef MX6Q_MARSBOARD_STRIM
+	imx6q_add_mxc_hdmi_core(&hdmi_core_data);
+#endif
 
 	imx6q_add_ipuv3(0, &ipu_data[0]);
 	imx6q_add_ipuv3(1, &ipu_data[1]);
@@ -1357,15 +1318,20 @@ static void __init mx6_marsboard_board_init(void)
 
 	imx6q_add_vdoa();
 	imx6q_add_lcdif(&lcdif_data);
+#ifndef MX6Q_MARSBOARD_STRIM
 	imx6q_add_ldb(&ldb_data);
+#endif
 	imx6q_add_v4l2_output(0);
 	imx6q_add_v4l2_capture(0);
-//	imx6q_add_mipi_csi2(&mipi_csi2_pdata);
+#ifndef MX6Q_MARSBOARD_STRIM
+	imx6q_add_mipi_csi2(&mipi_csi2_pdata);
+#endif
 	imx6q_add_imx_snvs_rtc();
 
+#ifndef MX6Q_MARSBOARD_STRIM
 	ldb_init();
+#endif
 
-/*
 	imx6q_add_imx_i2c(0, &mx6q_marsboard_i2c_data);
 	imx6q_add_imx_i2c(1, &mx6q_marsboard_i2c_data);
 	imx6q_add_imx_i2c(2, &mx6q_marsboard_i2c_data);
@@ -1375,7 +1341,6 @@ static void __init mx6_marsboard_board_init(void)
 			ARRAY_SIZE(mxc_i2c1_board_info));
 	i2c_register_board_info(2, mxc_i2c2_board_info,
 			ARRAY_SIZE(mxc_i2c2_board_info));
-*/
 
 	/* SPI */
 	imx6q_add_ecspi(0, &mx6q_marsboard_spi0_data);
@@ -1383,7 +1348,9 @@ static void __init mx6_marsboard_board_init(void)
 	spi_register_board_info(imx6_marsboard_spi_devices,
                                 ARRAY_SIZE(imx6_marsboard_spi_devices));
 
-//	imx6q_add_mxc_hdmi(&hdmi_data);
+#ifndef MX6Q_MARSBOARD_STRIM
+	imx6q_add_mxc_hdmi(&hdmi_data);
+#endif
 
 	imx6q_add_anatop_thermal_imx(1, &mx6q_marsboard_anatop_thermal_data);
 	imx6_init_fec(fec_data);
@@ -1394,23 +1361,23 @@ static void __init mx6_marsboard_board_init(void)
 	imx6q_add_sdhci_usdhc_imx(2, &mx6q_marsboard_sd3_data);
 	imx6q_add_sdhci_usdhc_imx(1, &mx6q_marsboard_sd2_data);
 	imx_add_viv_gpu(&imx6_gpu_data, &imx6q_gpu_pdata);
-//	imx6q_marsboard_init_usb();
+	imx6q_marsboard_init_usb();
 	imx6q_add_ahci(0, &mx6q_marsboard_sata_data);
 	imx6q_add_vpu();
-//	imx6q_init_audio();
+	imx6q_init_audio();
 	platform_device_register(&marsboard_vmmc_reg_devices);
 	imx_asrc_data.asrc_core_clk = clk_get(NULL, "asrc_clk");
 	imx_asrc_data.asrc_audio_clk = clk_get(NULL, "asrc_serial_clk");
 	imx6q_add_asrc(&imx_asrc_data);
 
 	/* release USB Hub reset */
-//	gpio_set_value(MX6Q_MARSBOARD_USB_HUB_RESET, 1);
+	gpio_set_value(MX6Q_MARSBOARD_USB_HUB_RESET, 1);
 
 	imx6q_add_mxc_pwm(0);
 	imx6q_add_mxc_pwm(1);
 	imx6q_add_mxc_pwm(2);
 	imx6q_add_mxc_pwm(3);
-//	imx6q_add_mxc_pwm_backlight(2, &mx6_marsboard_lcd_backlight_data);
+	imx6q_add_mxc_pwm_backlight(2, &mx6_marsboard_lcd_backlight_data);
 	imx6q_add_mxc_pwm_backlight(3, &mx6_marsboard_ldb_backlight_data);
 
 	imx6q_add_otp();
@@ -1427,19 +1394,19 @@ static void __init mx6_marsboard_board_init(void)
 //	marsboard_add_device_buttons();
 	marsboard_add_device_leds();
 
-//	imx6q_add_hdmi_soc();
-//	imx6q_add_hdmi_soc_dai();
+#ifndef MX6Q_MARSBOARD_STRIM
+	imx6q_add_hdmi_soc();
+	imx6q_add_hdmi_soc_dai();
+#endif
 
-
+#if 0
 	ret = gpio_request_array(mx6q_marsboard_flexcan_gpios,
 			ARRAY_SIZE(mx6q_marsboard_flexcan_gpios));
 	if (ret)
-		pr_err("failed to request flexcan-gpios: %d\n", ret);
-	else	{
+		pr_err("failed to request flexcan1-gpios: %d\n", ret);
+	else
 		imx6q_add_flexcan0(&mx6q_marsboard_flexcan0_pdata);
-		imx6q_add_flexcan1(&mx6q_marsboard_flexcan1_pdata);
-	}
-
+#endif
 	clko2 = clk_get(NULL, "clko2_clk");
 	if (IS_ERR(clko2))
 		pr_err("can't get CLKO2 clock.\n");
@@ -1465,7 +1432,7 @@ static void __init mx6_marsboard_timer_init(void)
 #endif
 	mx6_clocks_init(32768, 24000000, 0, 0);
 
-	uart_clk = clk_get_sys("imx-uart.2", NULL);
+	uart_clk = clk_get_sys("imx-uart.0", NULL);
 	early_console_setup(UART2_BASE_ADDR, uart_clk);
 }
 
@@ -1507,8 +1474,7 @@ static void __init mx6q_marsboard_reserve(void)
 /*
  * initialize __mach_desc_MX6Q_MARSBOARD data structure.
  */
-//MACHINE_START(MX6Q_MARSBOARD, "Freescale i.MX 6Quad Mars Board")
-MACHINE_START(MX6Q_MARSBOARD, "Remote Monitor by Strim-Tech")
+MACHINE_START(MX6Q_MARSBOARD, "Freescale i.MX 6Quad Mars Board")
 	.boot_params = MX6_PHYS_OFFSET + 0x100,
 	.fixup = fixup_mxc_board,
 	.map_io = mx6_map_io,
