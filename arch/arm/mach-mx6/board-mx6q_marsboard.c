@@ -864,8 +864,10 @@ static struct ahci_platform_data mx6q_marsboard_sata_data = {
 
 static struct gpio mx6q_marsboard_flexcan_gpios[] = {
 #ifndef MX6Q_MARSBOARD_STRIM
-	{ MX6Q_MARSBOARD_CAN1_EN, GPIOF_OUT_INIT_LOW, "flexcan1-en" },
-	{ MX6Q_MARSBOARD_CAN1_STBY, GPIOF_OUT_INIT_LOW, "flexcan1-stby" },
+	{ MX6Q_MARSBOARD_CAN1_EN, GPIOF_OUT_INIT_LOW, "flexcan0-en" },
+	{ MX6Q_MARSBOARD_CAN1_STBY, GPIOF_OUT_INIT_LOW, "flexcan0-stby" },
+	{ MX6Q_MARSBOARD_CAN2_EN, GPIOF_OUT_INIT_LOW, "flexcan1-en" },
+	{ MX6Q_MARSBOARD_CAN2_STBY, GPIOF_OUT_INIT_LOW, "flexcan1-stby" },
 #endif
 };
 
@@ -882,9 +884,27 @@ static void mx6q_marsboard_flexcan0_switch(int enable)
 #endif
 }
 
+static void mx6q_marsboard_flexcan1_switch(int enable)
+{
+#ifndef MX6Q_MARSBOARD_STRIM
+	if (enable) {
+		gpio_set_value(MX6Q_MARSBOARD_CAN2_EN, 1);
+		gpio_set_value(MX6Q_MARSBOARD_CAN2_STBY, 1);
+	} else {
+		gpio_set_value(MX6Q_MARSBOARD_CAN2_EN, 0);
+		gpio_set_value(MX6Q_MARSBOARD_CAN2_STBY, 0);
+	}
+#endif
+}
+
 static const struct flexcan_platform_data
 	mx6q_marsboard_flexcan0_pdata __initconst = {
 	.transceiver_switch = mx6q_marsboard_flexcan0_switch,
+};
+
+static const struct flexcan_platform_data
+	mx6q_marsboard_flexcan1_pdata __initconst = {
+	.transceiver_switch = mx6q_marsboard_flexcan1_switch,
 };
 
 
@@ -1415,9 +1435,11 @@ static void __init mx6_marsboard_board_init(void)
 	ret = gpio_request_array(mx6q_marsboard_flexcan_gpios,
 			ARRAY_SIZE(mx6q_marsboard_flexcan_gpios));
 	if (ret)
-		pr_err("failed to request flexcan1-gpios: %d\n", ret);
-	else
+		pr_err("failed to request flexcan-gpios: %d\n", ret);
+	else {
 		imx6q_add_flexcan0(&mx6q_marsboard_flexcan0_pdata);
+		imx6q_add_flexcan1(&mx6q_marsboard_flexcan1_pdata);
+	}
 
 	clko2 = clk_get(NULL, "clko2_clk");
 	if (IS_ERR(clko2))
