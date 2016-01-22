@@ -109,25 +109,25 @@
 #define FLEXCAN_CTRL_ERR_ALL 			(FLEXCAN_CTRL_ERR_BUS | FLEXCAN_CTRL_ERR_STATE)
 
 /* FLEXCAN error and status register (ESR) bits */
-#define FLEXCAN_ESR_TWRN_INT			BIT(17)
-#define FLEXCAN_ESR_RWRN_INT			BIT(16)
-#define FLEXCAN_ESR_BIT1_ERR			BIT(15)
-#define FLEXCAN_ESR_BIT0_ERR			BIT(14)
-#define FLEXCAN_ESR_ACK_ERR				BIT(13)
-#define FLEXCAN_ESR_CRC_ERR				BIT(12)
-#define FLEXCAN_ESR_FRM_ERR				BIT(11)
-#define FLEXCAN_ESR_STF_ERR				BIT(10)
-#define FLEXCAN_ESR_TX_WRN				BIT(9)
-#define FLEXCAN_ESR_RX_WRN				BIT(8)
-#define FLEXCAN_ESR_IDLE				BIT(7)
-#define FLEXCAN_ESR_TXRX				BIT(6)
-#define FLEXCAN_EST_FLT_CONF_SHIFT		(4)
-#define FLEXCAN_ESR_FLT_CONF_MASK		(0x3 << FLEXCAN_EST_FLT_CONF_SHIFT)
-#define FLEXCAN_ESR_FLT_CONF_ACTIVE		(0x0 << FLEXCAN_EST_FLT_CONF_SHIFT)
-#define FLEXCAN_ESR_FLT_CONF_PASSIVE	(0x1 << FLEXCAN_EST_FLT_CONF_SHIFT)
-#define FLEXCAN_ESR_BOFF_INT			BIT(2)
-#define FLEXCAN_ESR_ERR_INT				BIT(1)
-#define FLEXCAN_ESR_WAK_INT				BIT(0)
+#define FLEXCAN_ESR_TWRN_INT           BIT(17)
+#define FLEXCAN_ESR_RWRN_INT           BIT(16)
+#define FLEXCAN_ESR_BIT1_ERR           BIT(15)
+#define FLEXCAN_ESR_BIT0_ERR           BIT(14)
+#define FLEXCAN_ESR_ACK_ERR            BIT(13)
+#define FLEXCAN_ESR_CRC_ERR            BIT(12)
+#define FLEXCAN_ESR_FRM_ERR            BIT(11)
+#define FLEXCAN_ESR_STF_ERR            BIT(10)
+#define FLEXCAN_ESR_TX_WRN             BIT(9)
+#define FLEXCAN_ESR_RX_WRN             BIT(8)
+#define FLEXCAN_ESR_IDLE               BIT(7)
+#define FLEXCAN_ESR_TXRX               BIT(6)
+#define FLEXCAN_EST_FLT_CONF_SHIFT     (4)
+#define FLEXCAN_ESR_FLT_CONF_MASK      (0x3 << FLEXCAN_EST_FLT_CONF_SHIFT)
+#define FLEXCAN_ESR_FLT_CONF_ACTIVE    (0x0 << FLEXCAN_EST_FLT_CONF_SHIFT)
+#define FLEXCAN_ESR_FLT_CONF_PASSIVE   (0x1 << FLEXCAN_EST_FLT_CONF_SHIFT)
+#define FLEXCAN_ESR_BOFF_INT           BIT(2)
+#define FLEXCAN_ESR_ERR_INT            BIT(1)
+#define FLEXCAN_ESR_WAK_INT            BIT(0)
 
 #define FLEXCAN_ESR_ERR_BUS 			(FLEXCAN_ESR_BIT1_ERR | FLEXCAN_ESR_BIT0_ERR | FLEXCAN_ESR_ACK_ERR | \
 										 FLEXCAN_ESR_CRC_ERR | FLEXCAN_ESR_FRM_ERR | FLEXCAN_ESR_STF_ERR)
@@ -135,52 +135,52 @@
 #define FLEXCAN_ESR_ERR_ALL 			(FLEXCAN_ESR_ERR_BUS | FLEXCAN_ESR_ERR_STATE)
 
 /* FLEXCAN interrupt flag register (IFLAG) bits */
-#define FLEXCAN_TX_BUF_ID				8
-#define FLEXCAN_IFLAG_BUF(x)			BIT(x)
-#define FLEXCAN_IFLAG_RX_FIFO_OVERFLOW	BIT(7)
-#define FLEXCAN_IFLAG_RX_FIFO_WARN		BIT(6)
-#define FLEXCAN_IFLAG_RX_FIFO_AVAILABLE	BIT(5)
+#define FLEXCAN_TX_BUF_ID                  8
+#define FLEXCAN_IFLAG_BUF(x)               BIT(x)
+#define FLEXCAN_IFLAG_RX_FIFO_OVERFLOW     BIT(7)
+#define FLEXCAN_IFLAG_RX_FIFO_WARN	        BIT(6)
+#define FLEXCAN_IFLAG_RX_FIFO_AVAILABLE    BIT(5)
 
-#define FLEXCAN_IFLAG_DEFAULT 			(FLEXCAN_IFLAG_RX_FIFO_OVERFLOW | FLEXCAN_IFLAG_RX_FIFO_AVAILABLE | FLEXCAN_IFLAG_BUF(FLEXCAN_TX_BUF_ID))
+#define FLEXCAN_IFLAG_DEFAULT          (FLEXCAN_IFLAG_RX_FIFO_OVERFLOW | FLEXCAN_IFLAG_RX_FIFO_AVAILABLE | FLEXCAN_IFLAG_BUF(FLEXCAN_TX_BUF_ID))
 
 /* FLEXCAN message buffers */
-#define FLEXCAN_MB_CNT_CODE(x)			(((x) & 0xf) << 24)
-#define FLEXCAN_MB_CNT_SRR				BIT(22)
-#define FLEXCAN_MB_CNT_IDE				BIT(21)
-#define FLEXCAN_MB_CNT_RTR				BIT(20)
-#define FLEXCAN_MB_CNT_LENGTH(x)		(((x) & 0xf) << 16)
-#define FLEXCAN_MB_CNT_TIMESTAMP(x)		((x) & 0xffff)
+#define FLEXCAN_MB_CNT_CODE(x)         (((x) & 0xf) << 24)
+#define FLEXCAN_MB_CNT_SRR             BIT(22)
+#define FLEXCAN_MB_CNT_IDE             BIT(21)
+#define FLEXCAN_MB_CNT_RTR             BIT(20)
+#define FLEXCAN_MB_CNT_LENGTH(x)       (((x) & 0xf) << 16)
+#define FLEXCAN_MB_CNT_TIMESTAMP(x)    ((x) & 0xffff)
 
-#define FLEXCAN_MB_CODE_MASK 			(0xf0ffffff)
+#define FLEXCAN_MB_CODE_MASK           (0xf0ffffff)
 
 
-#define FLEXCAN_BTRT_1000_SP866		(0x01290005)
-#define FLEXCAN_BTRT_1000_SP800		(0x012a0004)
-#define FLEXCAN_BTRT_1000_SP733		(0x01230004)
-#define FLEXCAN_BTRT_1000_SP700		(0x02120002)
+#define FLEXCAN_BTRT_1000_SP866    (0x01290005)
+#define FLEXCAN_BTRT_1000_SP800    (0x012a0004)
+#define FLEXCAN_BTRT_1000_SP733    (0x01230004)
+#define FLEXCAN_BTRT_1000_SP700    (0x02120002)
 
-#define FLEXCAN_BTRT_1000			(0x01290005)
-#define FLEXCAN_BTRT_500			(0x023b0006)		/* Предварительно, настройка рассчитана через canconfig */
-#define FLEXCAN_BTRT_250			(0x053b0006)		/* Предварительно, настройка рассчитана через canconfig */
-#define FLEXCAN_BTRT_125			(0x0b3b0006)		/* Предварительно, настройка рассчитана через canconfig */
-#define FLEXCAN_BTRT_100			(0x0e3b0006)		/* Предварительно, настройка рассчитана через canconfig */
-#define FLEXCAN_BTRT_DFLT			FLEXCAN_BTRT_1000
+#define FLEXCAN_BTRT_1000          (0x01290005)
+#define FLEXCAN_BTRT_500           (0x023b0006)		/* Предварительно, настройка рассчитана через canconfig */
+#define FLEXCAN_BTRT_250           (0x053b0006)		/* Предварительно, настройка рассчитана через canconfig */
+#define FLEXCAN_BTRT_125           (0x0b3b0006)		/* Предварительно, настройка рассчитана через canconfig */
+#define FLEXCAN_BTRT_100           (0x0e3b0006)		/* Предварительно, настройка рассчитана через canconfig */
+#define FLEXCAN_BTRT_DFLT          FLEXCAN_BTRT_1000
 
-#define FLEXCAN_BTRT_MASK			(0xFFFF0007)
+#define FLEXCAN_BTRT_MASK          (0xFFFF0007)
 
-#define DRV_NAME		"flexcan"
-#define DRV_VER			"1.2.66" 
+#define FLEXCAN_DRV_NAME           "flexcan"
+#define FLEXCAN_DRV_VER            "1.2.68"
 
-#define DEV_FIRST  					(0) 
-#define DEV_COUNT  					(2) 
+#define FLEXCAN_DEV_FIRST          (0)
+#define FLEXCAN_DEV_COUNT          (2)
 
-#define BUF_RECV_CAP				(262144)
-#define BUF_SEND_CAP				(64)
+#define FLEXCAN_BUF_RECV_CAP       (262144)
+#define FLEXCAN_BUF_SEND_CAP       (64)
 
-#define BUF_RECV_MASK				(fimx6d.f_dev[dev_num].buf_recv_size - 1)
-#define BUF_SEND_MASK				(fimx6d.f_dev[dev_num].buf_send_size - 1)
+#define FLEXCAN_BUF_RECV_MASK      (fimx6d.f_dev[dev_num].buf_recv_size - 1)
+#define FLEXCAN_BUF_SEND_MASK      (fimx6d.f_dev[dev_num].buf_send_size - 1)
 
-#define IRQ_BASE					(142)
+#define FLEXCAN_IRQ_BASE           (142)
 
 #define init_MUTEX(LOCKNAME) sema_init(LOCKNAME,1);
 
@@ -216,7 +216,7 @@ enum flexcan_ip_version {
 };
 
 static struct can_bittiming_const flexcan_bittiming_const = {
-	.name = DRV_NAME,
+	.name = FLEXCAN_DRV_NAME,
 	.tseg1_min = 4,
 	.tseg1_max = 16,
 	.tseg2_min = 2,
@@ -237,109 +237,86 @@ struct flexcan_frame_mb {
 };
 
 struct flexcan_chardev {
-/*
- * Имя устройства.
- * Это же имя отдается файлу устройства в /dev и /proc
- */
+
+/* Имя устройства.
+ * Это же имя отдается файлу устройства в /dev и /proc */
 	char name[IFNAMSIZ];
-/*
- * Содержит major и minor номер зарегистрированного устройства
+
+/* Содержит major и minor номер зарегистрированного устройства
  * Номера извлекаются макросами MAJOR(dev_t devt) и MINOR(dev_t devt)
  * Номер формируется при регистрации устройства автоматически
- * Так же формируется макросом MKDEV(major, minor)
- */
-	dev_t f_devt;				// major и minor номера устройства
-/*
- * Адрес начала блока памяти устройства
+ * Так же формируется макросом MKDEV(major, minor) */
+	dev_t f_devt;
+
+/* Адрес начала блока памяти устройства
  * Сохраняется при регистрации устройства
- * Используется для чтения регистров устройства с помощью struct flexcan_regs
- */
+ * Используется для чтения регистров устройства с помощью struct flexcan_regs */
 	void __iomem *f_base;
-/*
- * Номер вектора прерывания для устройства
- */
-	u8 irq_num;					// IRQ номер
-/*
- * Флаг открытия файла устройства
+
+/* Номер вектора прерывания IRQ для устройства */
+	u8 irq_num;
+
+/* Флаг открытия файла устройства
  * Нужен для предотвращения множественного доступа к файлу
- * (а еще для запрета удаления драйвера при открытом файле, но не реализовано)
- */
- 	int nreaders, nwriters;		// флаги открытия файла
-/*
- * Значение регистра CTRL для настройки скорости передачи и режима работы
+ * (а еще для запрета удаления драйвера при открытом файле, но не реализовано) */
+ 	int nreaders, nwriters;
+
+/* Значение регистра CTRL для настройки скорости передачи и режима работы
  * При инициализации устанавливается значение по умолчанию FLEXCAN_BTRT_DFLT
- * Изменяется через IOCTL запрос
- */
+ * Изменяется через IOCTL запрос */
 	u32 reg_ctrl_bittiming;
-/*
- * Значение по умолчанию регистра CTRL для будущих использований
- * Создается в функции chip_start
- */
+
+/* Значение по умолчанию регистра CTRL для будущих использований
+ * Создается в функции chip_start */
 	u32 reg_ctrl_default;
-/*
- * Структура символьного утсройства.
- */
+
+/* Структура символьного утсройства */
 	struct cdev f_cdev;	
-/*
- * Структура утсройства.
- */
+
+/* Структура утсройства */
 	struct device dev;	
-/*
- * Указатель на структуру встроенного в контроллер устройства flexcan
- */			
+
+/* Указатель на структуру встроенного в контроллер устройства flexcan */
 	struct flexcan_platform_data *pdata;
-/*
- * Структура с данными файла устройства в файловой системе /proc 
- */
+
+/* Структура с данными файла устройства в файловой системе /proc  */
 	struct proc_dir_entry *dev_proc_file;
-/*
- * Структура с данными по тактированию устройства
- */
+
+/* Структура с данными по тактированию устройства */
 	struct clk *clk;
-/*
- * Структура с данными о настройках таймингов устройства
- */
+
+/* Структура с данными о настройках таймингов устройства */
 	struct can_bittiming bittiming;
-/*
- * Структура с данными о состоянии и работе устройства
- * Содержит различные счетчики и переменные состояния устройства
- */
+
+/* Структура с данными о состоянии и работе устройства
+ * Содержит различные счетчики и переменные состояния устройства */
 	struct flexcan_stats stats;
-/*
- * Размер буфера для сохранения принятых сообщений
- */
+
+/* Размер буфера для сохранения принятых сообщений */
 	u32 buf_recv_size;
-/*
- * Номера ячеек для записи и чтения циклического буффера для сохранения
- */
+
+/* Номера ячеек для записи и чтения циклического буффера для сохранения */
 	circle_buf_t frame_buf_recv;
-/*
- * Циклический буффер для сохранения принятых сообщений
- */
-	struct flexcan_frame_mb buf_recv[BUF_RECV_CAP];
-/*
- * Размер буфера для сохранения сообщений на отправку
- */
+
+/* Циклический буффер для сохранения принятых сообщений */
+	struct flexcan_frame_mb buf_recv[FLEXCAN_BUF_RECV_CAP];
+
+/* Размер буфера для сохранения сообщений на отправку */
 	u32 buf_send_size;
-/*
- * Номера ячеек для записи и чтения циклического буффера сообщений на отправку
- */
+
+/* Номера ячеек для записи и чтения циклического буффера сообщений на отправку  */
 	circle_buf_t frame_buf_send;
-/*
- * Циклический буффер для сохранения сообщений на отправку
- */
-	struct can_frame buf_send[BUF_SEND_CAP];
-/*
- * Структура для вызовов poll и select
- */
+
+/* Циклический буффер для сохранения сообщений на отправку */
+	struct can_frame buf_send[FLEXCAN_BUF_SEND_CAP];
+
+/* Структура для вызовов poll и select */
 	struct fasync_struct *async_queue;
-/*
- * Очереди ожидания данных.
- */
+
+/* Очереди ожидания данных */
 	wait_queue_head_t inq, outq;
-/*
- * Семафор
- */
+
+/* Семафор */
 	struct semaphore sem;
 
 	// int (*do_set_bittiming)(__u8 *dev_num, struct can_bittiming *bittiming);
@@ -357,7 +334,7 @@ struct flexcan_device	{
 
 	struct proc_dir_entry *dev_proc_dir;
 	struct class *f_class;	
-	struct flexcan_chardev f_dev[DEV_COUNT];
+	struct flexcan_chardev f_dev[FLEXCAN_DEV_COUNT];
 };
 
 static struct flexcan_device fimx6d;
@@ -380,7 +357,7 @@ static inline unsigned int flexcan_recv_buf_is_empty(const u8 dev_num)
 static inline unsigned int flexcan_recv_buf_is_full(const u8 dev_num)
 {
 	struct flexcan_chardev* f_dev = &fimx6d.f_dev[dev_num];
-	unsigned int n_next_first = (f_dev->frame_buf_recv.n_push + 1) & BUF_RECV_MASK;
+	unsigned int n_next_first = (f_dev->frame_buf_recv.n_push + 1) & FLEXCAN_BUF_RECV_MASK;
 	return (n_next_first == f_dev->frame_buf_recv.n_pop);
 }
 
@@ -397,7 +374,7 @@ static inline unsigned int flexcan_recv_buf_push(const u8 dev_num, const struct 
 	struct flexcan_frame_mb *buf = (struct flexcan_frame_mb *) (f_dev->buf_recv + f_buf->n_push);
 	memcpy(&buf->mb, s_mb, sizeof(struct flexcan_mb));
 	memcpy(&buf->time, s_tv, sizeof(struct timeval));
-	f_buf->n_push = (f_buf->n_push + 1) & BUF_RECV_MASK;
+	f_buf->n_push = (f_buf->n_push + 1) & FLEXCAN_BUF_RECV_MASK;
 
 	return 0;
 }
@@ -413,7 +390,7 @@ static inline unsigned int flexcan_recv_buf_pop(const u8 dev_num, struct flexcan
 	}
 
 	*(struct flexcan_frame_mb *) s_frame = *(struct flexcan_frame_mb *) (f_dev->buf_recv + f_buf->n_pop);
-	f_buf->n_pop = (f_buf->n_pop + 1) & BUF_RECV_MASK;
+	f_buf->n_pop = (f_buf->n_pop + 1) & FLEXCAN_BUF_RECV_MASK;
 	f_buf->n_save_pop = f_buf->n_pop;
 	
 	return 0;
@@ -423,7 +400,7 @@ static inline unsigned int flexcan_recv_buf_pop(const u8 dev_num, struct flexcan
 static inline unsigned int flexcan_recv_buf_get_free_space(const u8 dev_num)
 {
 	circle_buf_t *f_buf = &fimx6d.f_dev[dev_num].frame_buf_recv;
-	unsigned int buf_free_space = (f_buf->n_pop - f_buf->n_push - 1) & BUF_RECV_MASK;
+	unsigned int buf_free_space = (f_buf->n_pop - f_buf->n_push - 1) & FLEXCAN_BUF_RECV_MASK;
 	return buf_free_space;
 }
 
@@ -431,8 +408,8 @@ static inline unsigned int flexcan_recv_buf_get_free_space(const u8 dev_num)
 static inline unsigned int flexcan_recv_buf_get_data_size(const u8 dev_num)
 {
 	circle_buf_t *f_buf = &fimx6d.f_dev[dev_num].frame_buf_recv;
-	// unsigned int buf_data_size = (f_buf->n_push - f_buf->n_pop) & BUF_RECV_MASK;
-	unsigned int buf_data_size = (f_buf->n_push - f_buf->n_save_pop) & BUF_RECV_MASK;
+	// unsigned int buf_data_size = (f_buf->n_push - f_buf->n_pop) & FLEXCAN_BUF_RECV_MASK;
+	unsigned int buf_data_size = (f_buf->n_push - f_buf->n_save_pop) & FLEXCAN_BUF_RECV_MASK;
 	return buf_data_size;
 }
 
@@ -465,7 +442,7 @@ static inline unsigned int flexcan_send_buf_is_empty(const u8 dev_num)
 static inline unsigned int flexcan_send_buf_is_full(const u8 dev_num)
 {
 	struct flexcan_chardev* f_dev = &fimx6d.f_dev[dev_num];
-	unsigned int n_next_first = (f_dev->frame_buf_send.n_push + 1) & BUF_SEND_MASK;
+	unsigned int n_next_first = (f_dev->frame_buf_send.n_push + 1) & FLEXCAN_BUF_SEND_MASK;
 	return (n_next_first == f_dev->frame_buf_send.n_pop);
 }
 
@@ -474,7 +451,7 @@ static inline unsigned int flexcan_send_buf_push(const u8 dev_num, const struct 
 {
 	struct flexcan_chardev* f_dev = &fimx6d.f_dev[dev_num];
 	circle_buf_t *f_buf = &f_dev->frame_buf_send;
-	unsigned int n_next_first = (f_buf->n_push + 1) & BUF_SEND_MASK;
+	unsigned int n_next_first = (f_buf->n_push + 1) & FLEXCAN_BUF_SEND_MASK;
 
 	if(flexcan_send_buf_is_full(dev_num)) 	{
 		return 1;
@@ -498,7 +475,7 @@ static inline unsigned int flexcan_send_buf_pop(const u8 dev_num, struct can_fra
 	}
 
 	*(struct can_frame *) s_frame = *(struct can_frame *) (f_dev->buf_send + f_buf->n_pop);
-	f_buf->n_pop = (f_buf->n_pop + 1) & BUF_SEND_MASK;
+	f_buf->n_pop = (f_buf->n_pop + 1) & FLEXCAN_BUF_SEND_MASK;
 
 	return 0;
 }
@@ -507,7 +484,7 @@ static inline unsigned int flexcan_send_buf_pop(const u8 dev_num, struct can_fra
 static inline unsigned int flexcan_send_buf_free_space(const u8 dev_num)
 {
 	circle_buf_t *f_buf = &fimx6d.f_dev[dev_num].frame_buf_send;
-	unsigned int buf_free_space = (f_buf->n_pop - f_buf->n_push - 1) & BUF_SEND_MASK;
+	unsigned int buf_free_space = (f_buf->n_pop - f_buf->n_push - 1) & FLEXCAN_BUF_SEND_MASK;
 	return buf_free_space;
 }
 
@@ -515,7 +492,7 @@ static inline unsigned int flexcan_send_buf_free_space(const u8 dev_num)
 static inline unsigned int flexcan_send_buf_data_size(const u8 dev_num)
 {
 	circle_buf_t *f_buf = &fimx6d.f_dev[dev_num].frame_buf_send;
-	unsigned int buf_data_size = (f_buf->n_push - f_buf->n_pop) & BUF_SEND_MASK;
+	unsigned int buf_data_size = (f_buf->n_push - f_buf->n_pop) & FLEXCAN_BUF_SEND_MASK;
 	return buf_data_size;
 }
 
@@ -949,12 +926,12 @@ static inline void flexcan_f_dev_init(struct flexcan_chardev *f_dev)
 	f_dev->stats.reg_mcr = 0;	
 	f_dev->stats.reg_ctrl = 0;
 
-	f_dev->buf_recv_size = BUF_RECV_CAP;
+	f_dev->buf_recv_size = FLEXCAN_BUF_RECV_CAP;
 	f_dev->frame_buf_recv.n_push = 0;
 	f_dev->frame_buf_recv.n_save_pop = 0;
 	f_dev->frame_buf_recv.n_pop = 0;
 
-	f_dev->buf_send_size = BUF_SEND_CAP;
+	f_dev->buf_send_size = FLEXCAN_BUF_SEND_CAP;
 	f_dev->frame_buf_send.n_push = 0;
 	f_dev->frame_buf_send.n_save_pop = 0;
 	f_dev->frame_buf_send.n_pop = 0;
@@ -1372,7 +1349,7 @@ static void do_state(struct can_frame *cf, const u8 dev_num, enum can_state new_
 
 static irqreturn_t flexcan_irq(int irq, void *dev_id)
 {
-	const u8 dev_num = (irq - IRQ_BASE);
+	const u8 dev_num = (irq - FLEXCAN_IRQ_BASE);
 	struct flexcan_chardev* f_dev = &fimx6d.f_dev[dev_num];
 	struct flexcan_stats *stats = &f_dev->stats;
 	struct flexcan_regs __iomem *regs = f_dev->f_base;
@@ -1726,7 +1703,7 @@ static int __devinit flexcan_probe(struct platform_device *pdev)
 	void __iomem *base;
 	int err, irq, major;
 
-	printk("%s driver ver %s by Strim-tech\n", DRV_NAME, DRV_VER);
+	printk("%s driver ver %s by Strim-tech\n", FLEXCAN_DRV_NAME, FLEXCAN_DRV_VER);
 
 	/* pdev->id 	- ID устройства (0 или 1)
 	 * dev->irq 	- IRQ number
@@ -1782,7 +1759,7 @@ static int __devinit flexcan_probe(struct platform_device *pdev)
     }
 
 	if(!fimx6d.is_init)	{
-		err = alloc_chrdev_region(&fimx6d.f_devt, DEV_FIRST, DEV_COUNT, fimx6d.name);
+		err = alloc_chrdev_region(&fimx6d.f_devt, FLEXCAN_DEV_FIRST, FLEXCAN_DEV_COUNT, fimx6d.name);
 		if (err < 0) {
 			err = -1;
 			dev_dbg(&f_dev->dev, "flexcan_probe alloc chrdev region failed\n");
@@ -1835,7 +1812,7 @@ static int __devinit flexcan_probe(struct platform_device *pdev)
  err_class_create:
  err_cdev_add:	
  	if(!fimx6d.is_init)	{
- 		unregister_chrdev_region(f_dev->f_devt, DEV_COUNT);
+ 		unregister_chrdev_region(f_dev->f_devt, FLEXCAN_DEV_COUNT);
  	}
  err_reg_chrdev:
 	iounmap(base);
@@ -1865,7 +1842,7 @@ static int __devexit flexcan_remove(struct platform_device *pdev)
 
 	cdev_del(&f_dev->f_cdev);
 	if(!fimx6d.is_init)	{
-		unregister_chrdev_region(f_dev->f_devt, DEV_COUNT);
+		unregister_chrdev_region(f_dev->f_devt, FLEXCAN_DEV_COUNT);
 		// flexcan_proc_dir_exit();	/* нужно перенести, но куда?..... */
 	}
 
@@ -1927,7 +1904,7 @@ static int flexcan_resume(struct platform_device *pdev)
 
 
 static struct platform_driver flexcan_driver = {
-	.driver.name = 	DRV_NAME,
+	.driver.name = 	FLEXCAN_DRV_NAME,
 	.probe = 		flexcan_probe,
 	.id_table = 	flexcan_devtype,
 	.remove = 		__devexit_p(flexcan_remove),
