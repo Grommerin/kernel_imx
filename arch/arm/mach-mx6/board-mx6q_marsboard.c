@@ -113,8 +113,10 @@ static struct clk *sata_clk;
 
 extern char *gp_reg_id;
 
+#ifndef MX6Q_MARSBOARD_STRIM
 extern struct regulator *(*get_cpu_regulator)(void);
 extern void (*put_cpu_regulator)(void);
+#endif
 extern void mx6_cpu_regulator_init(void);
 
 static iomux_v3_cfg_t mx6q_marsboard_pads[] = {
@@ -859,14 +861,17 @@ static struct ahci_platform_data mx6q_marsboard_sata_data = {
 	.exit = mx6q_marsboard_sata_exit,
 };
 
-#if 0
+
 static struct gpio mx6q_marsboard_flexcan_gpios[] = {
+#ifndef MX6Q_MARSBOARD_STRIM
 	{ MX6Q_MARSBOARD_CAN1_EN, GPIOF_OUT_INIT_LOW, "flexcan1-en" },
 	{ MX6Q_MARSBOARD_CAN1_STBY, GPIOF_OUT_INIT_LOW, "flexcan1-stby" },
+#endif
 };
 
 static void mx6q_marsboard_flexcan0_switch(int enable)
 {
+#ifndef MX6Q_MARSBOARD_STRIM
 	if (enable) {
 		gpio_set_value(MX6Q_MARSBOARD_CAN1_EN, 1);
 		gpio_set_value(MX6Q_MARSBOARD_CAN1_STBY, 1);
@@ -874,13 +879,14 @@ static void mx6q_marsboard_flexcan0_switch(int enable)
 		gpio_set_value(MX6Q_MARSBOARD_CAN1_EN, 0);
 		gpio_set_value(MX6Q_MARSBOARD_CAN1_STBY, 0);
 	}
+#endif
 }
 
 static const struct flexcan_platform_data
 	mx6q_marsboard_flexcan0_pdata __initconst = {
 	.transceiver_switch = mx6q_marsboard_flexcan0_switch,
 };
-#endif
+
 
 static struct viv_gpu_platform_data imx6q_gpu_pdata __initdata = {
 	.reserved_mem_size = SZ_128M,
@@ -1316,9 +1322,9 @@ static void __init mx6_marsboard_board_init(void)
 	for (i = 0; i < ARRAY_SIZE(marsboard_fb_data); i++)
 		imx6q_add_ipuv3fb(i, &marsboard_fb_data[i]);
 
+#ifndef MX6Q_MARSBOARD_STRIM
 	imx6q_add_vdoa();
 	imx6q_add_lcdif(&lcdif_data);
-#ifndef MX6Q_MARSBOARD_STRIM
 	imx6q_add_ldb(&ldb_data);
 #endif
 	imx6q_add_v4l2_output(0);
@@ -1330,7 +1336,6 @@ static void __init mx6_marsboard_board_init(void)
 
 #ifndef MX6Q_MARSBOARD_STRIM
 	ldb_init();
-#endif
 
 	imx6q_add_imx_i2c(0, &mx6q_marsboard_i2c_data);
 	imx6q_add_imx_i2c(1, &mx6q_marsboard_i2c_data);
@@ -1348,7 +1353,7 @@ static void __init mx6_marsboard_board_init(void)
 	spi_register_board_info(imx6_marsboard_spi_devices,
                                 ARRAY_SIZE(imx6_marsboard_spi_devices));
 
-#ifndef MX6Q_MARSBOARD_STRIM
+
 	imx6q_add_mxc_hdmi(&hdmi_data);
 #endif
 
@@ -1360,11 +1365,15 @@ static void __init mx6_marsboard_board_init(void)
 	*/
 	imx6q_add_sdhci_usdhc_imx(2, &mx6q_marsboard_sd3_data);
 	imx6q_add_sdhci_usdhc_imx(1, &mx6q_marsboard_sd2_data);
+#ifndef MX6Q_MARSBOARD_STRIM
 	imx_add_viv_gpu(&imx6_gpu_data, &imx6q_gpu_pdata);
 	imx6q_marsboard_init_usb();
 	imx6q_add_ahci(0, &mx6q_marsboard_sata_data);
+#endif
 	imx6q_add_vpu();
+#ifndef MX6Q_MARSBOARD_STRIM
 	imx6q_init_audio();
+#endif
 	platform_device_register(&marsboard_vmmc_reg_devices);
 	imx_asrc_data.asrc_core_clk = clk_get(NULL, "asrc_clk");
 	imx_asrc_data.asrc_audio_clk = clk_get(NULL, "asrc_serial_clk");
@@ -1373,12 +1382,14 @@ static void __init mx6_marsboard_board_init(void)
 	/* release USB Hub reset */
 	gpio_set_value(MX6Q_MARSBOARD_USB_HUB_RESET, 1);
 
+#ifndef MX6Q_MARSBOARD_STRIM
 	imx6q_add_mxc_pwm(0);
 	imx6q_add_mxc_pwm(1);
 	imx6q_add_mxc_pwm(2);
 	imx6q_add_mxc_pwm(3);
 	imx6q_add_mxc_pwm_backlight(2, &mx6_marsboard_lcd_backlight_data);
 	imx6q_add_mxc_pwm_backlight(3, &mx6_marsboard_ldb_backlight_data);
+#endif
 
 	imx6q_add_otp();
 	imx6q_add_viim();
@@ -1391,7 +1402,9 @@ static void __init mx6_marsboard_board_init(void)
 	imx6q_add_ion(0, &imx_ion_data,
 		sizeof(imx_ion_data) + sizeof(struct ion_platform_heap));
 
-//	marsboard_add_device_buttons();
+#ifndef MX6Q_MARSBOARD_STRIM
+	marsboard_add_device_buttons();
+#endif
 	marsboard_add_device_leds();
 
 #ifndef MX6Q_MARSBOARD_STRIM
@@ -1399,14 +1412,13 @@ static void __init mx6_marsboard_board_init(void)
 	imx6q_add_hdmi_soc_dai();
 #endif
 
-#if 0
 	ret = gpio_request_array(mx6q_marsboard_flexcan_gpios,
 			ARRAY_SIZE(mx6q_marsboard_flexcan_gpios));
 	if (ret)
 		pr_err("failed to request flexcan1-gpios: %d\n", ret);
 	else
 		imx6q_add_flexcan0(&mx6q_marsboard_flexcan0_pdata);
-#endif
+
 	clko2 = clk_get(NULL, "clko2_clk");
 	if (IS_ERR(clko2))
 		pr_err("can't get CLKO2 clock.\n");
