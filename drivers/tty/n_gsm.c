@@ -2255,7 +2255,6 @@ static int gsmld_open(struct tty_struct *tty)
 	ret = gsmld_attach_gsm(tty, gsm);
 	if (ret != 0) {
 		gsm_cleanup_mux(gsm);
-		mux_put(gsm);
 	}
 	return ret;
 }
