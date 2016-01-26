@@ -1507,7 +1507,7 @@ static void __init mx6q_marsboard_reserve(void)
 /*
  * initialize __mach_desc_MX6Q_MARSBOARD data structure.
  */
-MACHINE_START(MX6Q_MARSBOARD, "Freescale i.MX 6Quad Mars Board")
+MACHINE_START(MX6Q_MARSBOARD, "i.MX6Quad Strim Remote Monitor Board")
 	.boot_params = MX6_PHYS_OFFSET + 0x100,
 	.fixup = fixup_mxc_board,
 	.map_io = mx6_map_io,
