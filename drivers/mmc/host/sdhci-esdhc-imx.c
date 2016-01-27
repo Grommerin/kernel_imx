@@ -59,7 +59,7 @@
 
 #define ESDHC_FLAG_GPIO_FOR_CD_WP	(1 << 0)
 
-#define	SDHCI_CTRL_D3CD			0x08
+#define SDHCI_CTRL_D3CD			0x08
 
 #define SDHCI_PROT_CTRL_DMASEL_MASK		(3 << 8)
 #define SDHCI_PROT_CTRL_DTW		(3 << 1)
@@ -525,6 +525,7 @@ static u8 esdhc_readb_le(struct sdhci_host *host, int reg)
 static void esdhc_writeb_le(struct sdhci_host *host, u8 val, int reg)
 {
 	u32 new_val;
+	u32 mask;
 
 	switch (reg) {
 	case SDHCI_POWER_CONTROL:
@@ -572,7 +573,9 @@ static void esdhc_writeb_le(struct sdhci_host *host, u8 val, int reg)
 		/* DMA mode bits are shifted */
 		new_val |= (val & SDHCI_CTRL_DMA_MASK) << 5;
 
-		esdhc_clrset_le(host, 0xffff, new_val, reg);
+		mask = 0xffff & ~(ESDHC_CTRL_BUSWIDTH_MASK | SDHCI_CTRL_D3CD);
+
+		esdhc_clrset_le(host, mask, new_val, reg);
 		return;
 	}
 	esdhc_clrset_le(host, 0xff, val, reg);
