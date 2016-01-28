@@ -524,6 +524,8 @@ static u8 esdhc_readb_le(struct sdhci_host *host, int reg)
 
 static void esdhc_writeb_le(struct sdhci_host *host, u8 val, int reg)
 {
+	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
+	struct pltfm_imx_data *imx_data = pltfm_host->priv;
 	u32 new_val;
 	u32 mask;
 
@@ -577,6 +579,18 @@ static void esdhc_writeb_le(struct sdhci_host *host, u8 val, int reg)
 
 		esdhc_clrset_le(host, mask, new_val, reg);
 		return;
+	case SDHCI_TIMEOUT_CONTROL:
+		/*
+		 * On i.MX6 the timeout value DTOCV is 4 bit large. Touch only
+		 * these 4 bits (lower nibble of the byte), but not the upper
+		 * nibble of the byte. The upper nibble of the byte contains
+		 * IPP_RST_N which should keep the reset value, i.e. 1, and
+		 * shouldn't be touched here.
+		 */
+		if (is_imx6q_usdhc(imx_data)) {
+			esdhc_clrset_le(host, 0x0f, val, reg);
+			return;
+		}
 	}
 	esdhc_clrset_le(host, 0xff, val, reg);
 }
