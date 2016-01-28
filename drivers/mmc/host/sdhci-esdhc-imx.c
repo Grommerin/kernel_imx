@@ -89,6 +89,12 @@
  */
 #define ESDHC_FLAG_MULTIBLK_NO_INT	(1 << 1)
 
+/*
+ * The flag tells that the ESDHC controller is an USDHC block that is
+ * integrated on the i.MX6 series.
+ */
+#define ESDHC_FLAG_USDHC BIT(3)
+
 struct pltfm_imx_data {
 	int flags;
 	u32 scratchpad;
@@ -522,6 +528,11 @@ static u8 esdhc_readb_le(struct sdhci_host *host, int reg)
 	return ret;
 }
 
+static inline int esdhc_is_usdhc(struct pltfm_imx_data *data)
+{
+	return !!(data->flags & ESDHC_FLAG_USDHC);
+}
+
 static void esdhc_writeb_le(struct sdhci_host *host, u8 val, int reg)
 {
 	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
@@ -587,7 +598,7 @@ static void esdhc_writeb_le(struct sdhci_host *host, u8 val, int reg)
 		 * IPP_RST_N which should keep the reset value, i.e. 1, and
 		 * shouldn't be touched here.
 		 */
-		if (is_imx6q_usdhc(imx_data)) {
+		if (esdhc_is_usdhc(imx_data)) {
 			esdhc_clrset_le(host, 0x0f, val, reg);
 			return;
 		}
